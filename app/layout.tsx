@@ -3,8 +3,8 @@ import './globals.css'
 import { XPBar } from '@/components/XPBar'
 
 export const metadata: Metadata = {
-  title: 'StockQuest — Learn to Trade',
-  description: 'Learn stock trading through gamified lessons and a live simulator',
+  title: 'Stockly — Learn to Trade',
+  description: 'The fun, beginner-friendly way to learn stocks and start building wealth.',
 }
 
 export const viewport: Viewport = {
@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-navy text-white antialiased">
+      <body className="min-h-screen bg-brand-purple text-white antialiased">
         {/* Persistent XP bar at the very top */}
         <XPBar />
 

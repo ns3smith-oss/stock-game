@@ -8,12 +8,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: '#0F172A',
-        gold: '#F59E0B',
-        'gold-light': '#FCD34D',
+        // Stockly brand colors
+        'brand-purple': '#1E0A3C',
+        'brand-purple-light': '#2D1558',
+        'brand-yellow': '#FFD700',
+        'brand-yellow-alt': '#FFC107',
+        'brand-lavender': '#C4B0E0',
+        // Legacy aliases kept for compatibility during migration
+        navy: '#1E0A3C',
+        gold: '#FFD700',
+        'gold-light': '#FFC107',
         'brand-blue': '#6366F1',
-        'success': '#22C55E',
-        'danger': '#EF4444',
+        'success': '#4ADE80',
+        'danger': '#FF6B6B',
       },
       keyframes: {
         xpFloat: {
