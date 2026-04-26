@@ -34,14 +34,14 @@ export function XPBar() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-40 bg-brand-purple-light border-b border-white/10 px-4 py-2 flex items-center gap-3">
-        <div className="flex-shrink-0 bg-brand-yellow text-brand-purple text-xs font-black px-2 py-1 rounded-full">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-brand-purple px-4 py-2 flex items-center gap-3">
+        <div className="flex-shrink-0 bg-brand-coral text-brand-navy text-xs font-black px-2 py-1 rounded-full">
           LVL {state.level}
         </div>
         <div className="flex-1">
           <ProgressBar value={fillPct} />
         </div>
-        <div className="flex-shrink-0 text-gold-light text-xs font-bold">
+        <div className="flex-shrink-0 text-brand-coral text-xs font-bold">
           {isMaxLevel ? 'MAX' : `${state.xp} XP`}
         </div>
       </div>

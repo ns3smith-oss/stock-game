@@ -140,15 +140,15 @@ export default function PlacementPage() {
       <div className="max-w-sm mx-auto px-6 py-10 flex flex-col items-center text-center min-h-screen">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-7xl mb-6">{result.emoji}</div>
-          <h2 className="text-2xl font-black text-white mb-4 leading-tight">{result.title}</h2>
-          <p className="text-brand-lavender text-base leading-relaxed mb-8">{result.description}</p>
-          <div className="bg-brand-purple-light rounded-2xl px-6 py-3 text-brand-yellow font-bold text-sm">
+          <h2 className="text-2xl font-black text-brand-navy mb-4 leading-tight">{result.title}</h2>
+          <p className="text-brand-navy-muted text-base leading-relaxed mb-8">{result.description}</p>
+          <div className="bg-brand-purple-light rounded-2xl px-6 py-3 text-brand-purple font-bold text-sm">
             Your track: {track.charAt(0).toUpperCase() + track.slice(1)}
           </div>
         </div>
         <button
           onClick={() => router.push(`/learn/${track}`)}
-          className="w-full bg-brand-yellow text-brand-purple font-black text-lg py-4 rounded-2xl shadow-lg active:scale-95 transition-transform mt-8"
+          className="w-full bg-brand-purple text-white font-black text-lg py-4 rounded-2xl shadow-lg active:scale-95 transition-transform mt-8"
         >
           Start my lessons →
         </button>
@@ -159,25 +159,25 @@ export default function PlacementPage() {
   return (
     <div className="max-w-sm mx-auto px-6 py-10 flex flex-col min-h-screen">
 
-      {/* Progress */}
+      {/* Progress bar */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="flex-1 bg-white/10 rounded-full h-2">
+        <div className="flex-1 bg-brand-navy/10 rounded-full h-2">
           <div
-            className="bg-brand-yellow h-2 rounded-full transition-all duration-300"
-            style={{ width: `${((index) / QUESTIONS.length) * 100}%` }}
+            className="bg-brand-cyan h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(index / QUESTIONS.length) * 100}%` }}
           />
         </div>
-        <span className="text-brand-lavender text-xs">{index + 1} / {QUESTIONS.length}</span>
+        <span className="text-brand-navy-muted text-xs">{index + 1} / {QUESTIONS.length}</span>
       </div>
 
       {/* Question */}
       <div className="flex-1 flex flex-col justify-center">
         {question.note && (
-          <p className="text-brand-yellow text-xs font-bold mb-3 text-center uppercase tracking-wide">
+          <p className="text-brand-purple text-xs font-bold mb-3 text-center uppercase tracking-wide">
             {question.note}
           </p>
         )}
-        <h2 className="text-xl font-black text-white mb-8 leading-snug text-center">
+        <h2 className="text-xl font-black text-brand-navy mb-8 leading-snug text-center">
           {question.question}
         </h2>
 
@@ -188,10 +188,10 @@ export default function PlacementPage() {
               onClick={() => selected === null && handleSelect(option.points, i)}
               className={`w-full text-left px-5 py-4 rounded-2xl border-2 font-medium text-sm transition-all duration-200 ${
                 selected === i
-                  ? 'border-brand-yellow bg-brand-yellow text-brand-purple'
+                  ? 'border-brand-purple bg-brand-purple text-white'
                   : selected !== null
-                  ? 'border-white/10 bg-brand-purple-light text-brand-lavender opacity-50'
-                  : 'border-white/20 bg-brand-purple-light text-white active:scale-95'
+                  ? 'border-brand-navy/10 bg-white text-brand-navy-muted opacity-50'
+                  : 'border-brand-navy/10 bg-white text-brand-navy active:scale-95'
               }`}
             >
               {option.label}

@@ -16,16 +16,18 @@ A mobile-first, beginner-friendly stock education app. Bright, playful, and welc
 ## Color System
 | Role | Color | Hex |
 |---|---|---|
-| Background | Deep Purple | `#1E0A3C` |
-| Surface / Cards | Soft Purple | `#2D1558` |
-| Primary Action | Bright Yellow | `#FFD700` |
-| Accent / Badges | Yellow-Gold | `#FFC107` |
-| Text Primary | White | `#FFFFFF` |
-| Text Secondary | Soft Lavender | `#C4B0E0` |
-| Success | Bright Green | `#4ADE80` |
+| Background | Soft Cream | `#FFF8F0` |
+| Surface / Cards | White | `#FFFFFF` |
+| Primary / Buttons | Electric Purple | `#7C3AED` |
+| Card Tint | Light Purple | `#EDE9FF` |
+| Button Accent | Hot Coral | `#FFD60A` |
+| Rewards / XP | Yellow | `#FFD609` |
+| Progress / Success | Cyan | `#00C2FF` |
+| Text Primary | Dark Navy Purple | `#1E1E2F` |
+| Text Muted | Muted Navy | `#6B6B8A` |
 | Error | Coral Red | `#FF6B6B` |
 
-Tailwind tokens: `brand-purple`, `brand-purple-light`, `brand-yellow`, `brand-yellow-alt`, `brand-lavender`
+Tailwind tokens: `brand-purple`, `brand-purple-light`, `brand-coral`, `brand-yellow`, `brand-cyan`, `brand-cream`, `brand-navy`, `brand-navy-muted`
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
@@ -182,5 +184,5 @@ stock-game/
 6. Deploy to Vercel
 
 ---
-*Last updated: 2026-04-22 — Rebranded to Stockly, new color system, home/disclaimer/onboarding/placement screens built*
+*Last updated: 2026-04-26 — New color system applied (cream bg, electric purple, cyan progress, coral XP badge) across all screens*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*

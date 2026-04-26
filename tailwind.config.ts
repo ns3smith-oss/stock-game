@@ -9,17 +9,20 @@ const config: Config = {
     extend: {
       colors: {
         // Stockly brand colors
-        'brand-purple': '#1E0A3C',
-        'brand-purple-light': '#2D1558',
-        'brand-yellow': '#FFD700',
-        'brand-yellow-alt': '#FFC107',
-        'brand-lavender': '#C4B0E0',
-        // Legacy aliases kept for compatibility during migration
-        navy: '#1E0A3C',
-        gold: '#FFD700',
-        'gold-light': '#FFC107',
-        'brand-blue': '#6366F1',
-        'success': '#4ADE80',
+        'brand-purple': '#7C3AED',
+        'brand-purple-light': '#EDE9FF',
+        'brand-coral': '#FFD60A',
+        'brand-yellow': '#FFD609',
+        'brand-cyan': '#00C2FF',
+        'brand-cream': '#FFF8F0',
+        'brand-navy': '#1E1E2F',
+        'brand-navy-muted': '#6B6B8A',
+        // Legacy aliases
+        navy: '#1E1E2F',
+        gold: '#FFD609',
+        'gold-light': '#FFD60A',
+        'brand-blue': '#7C3AED',
+        'success': '#00C2FF',
         'danger': '#FF6B6B',
       },
       keyframes: {

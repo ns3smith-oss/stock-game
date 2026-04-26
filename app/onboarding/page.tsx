@@ -43,10 +43,10 @@ export default function OnboardingPage() {
             key={i}
             className={`h-2 rounded-full transition-all duration-300 ${
               i === index
-                ? 'w-6 bg-brand-yellow'
+                ? 'w-6 bg-brand-purple'
                 : i < index
-                ? 'w-2 bg-brand-yellow/50'
-                : 'w-2 bg-white/20'
+                ? 'w-2 bg-brand-purple/40'
+                : 'w-2 bg-brand-navy/20'
             }`}
           />
         ))}
@@ -56,15 +56,15 @@ export default function OnboardingPage() {
       <div className="flex-1 flex flex-col justify-center">
         <div className="text-center mb-8">
           <div className="text-7xl mb-6">{slide.emoji}</div>
-          <h2 className="text-2xl font-black text-white mb-4 leading-tight">{slide.title}</h2>
-          <p className="text-brand-lavender text-base leading-relaxed">{slide.body}</p>
+          <h2 className="text-2xl font-black text-brand-navy mb-4 leading-tight">{slide.title}</h2>
+          <p className="text-brand-navy-muted text-base leading-relaxed">{slide.body}</p>
         </div>
       </div>
 
       {/* Next button */}
       <button
         onClick={() => isLast ? router.push('/placement') : setIndex(index + 1)}
-        className="w-full bg-brand-yellow text-brand-purple font-black text-lg py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
+        className="w-full bg-brand-purple text-white font-black text-lg py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
       >
         {isLast ? "I'm ready — let's find my level →" : 'Next →'}
       </button>
@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       {index > 0 && (
         <button
           onClick={() => setIndex(index - 1)}
-          className="text-brand-lavender text-sm mt-4 text-center w-full"
+          className="text-brand-navy-muted text-sm mt-4 text-center w-full"
         >
           ← Back
         </button>
