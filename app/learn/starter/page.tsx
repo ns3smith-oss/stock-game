@@ -6,7 +6,6 @@ import { haptics } from '@/lib/haptics'
 import { getCurrentUser } from '@/lib/auth'
 import { STARTER_UNITS } from '@/lib/starter-lessons'
 import { StocklyLogo } from '@/components/StocklyLogo'
-import { HamburgerMenu } from '@/components/HamburgerMenu'
 
 const PROGRESS_KEY = 'stockly_starter_progress'
 
@@ -22,14 +21,12 @@ function loadProgress(): Record<string, boolean> {
 export default function StarterTrackPage() {
   const router = useRouter()
   const [userName, setUserName] = useState('')
-  const [userPlan, setUserPlan] = useState<string | null>(null)
   const [progress, setProgress] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) { router.push('/auth'); return }
     setUserName(user.name.split(' ')[0])
-    setUserPlan(user.plan)
     setProgress(loadProgress())
   }, [router])
 
@@ -64,12 +61,11 @@ export default function StarterTrackPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <HamburgerMenu userName={userName} userPlan={userPlan} />
         <div className="flex items-center -space-x-1">
           <StocklyLogo size={28} />
           <span className="text-xl font-black text-brand-white tracking-tight leading-none">tockly</span>
         </div>
-        <button onClick={() => router.push('/learn')} className="text-brand-muted text-sm active:scale-95 w-8 text-right">
+        <button onClick={() => router.push('/learn')} className="text-brand-muted text-sm active:scale-95">
           ✕
         </button>
       </div>
