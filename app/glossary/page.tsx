@@ -59,6 +59,7 @@ const TERMS: Term[] = [
   { term: 'Beta', category: 'analysis', definition: 'A measure of a stock\'s volatility relative to the overall market. Beta of 1 = moves with the market. Beta of 2 = twice as volatile. Beta of 0.5 = half as volatile.' },
   { term: 'Support Level', category: 'analysis', definition: 'A price where a stock has historically stopped falling and bounced back up. Represents a zone of buying interest. Commonly used in technical analysis.' },
   { term: 'Resistance Level', category: 'analysis', definition: 'A price where a stock has historically struggled to break through and often reversed downward. Represents a zone of selling pressure.' },
+  { term: 'Ceiling', category: 'analysis', definition: 'Another word for resistance level. The price point a stock keeps hitting but can\'t break above. When a stock finally breaks through its ceiling on high volume, it\'s a strong bullish signal.' },
   { term: 'Moving Average', category: 'analysis', definition: 'The average price of a stock over a specified period (e.g., 50-day or 200-day). Smooths out daily price swings to reveal the underlying trend.' },
 
   // ── Risk ──
