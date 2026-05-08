@@ -18,7 +18,7 @@ export default function HomePage() {
 
   function handleStart() {
     haptics.tap()
-    router.push('/welcome')
+    router.push('/auth')
   }
 
   if (loading) {

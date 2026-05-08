@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { haptics } from '@/lib/haptics'
+import { agreeToTerms } from '@/lib/auth'
 
 export default function WelcomePage() {
   const [checked, setChecked] = useState(false)
@@ -21,12 +22,7 @@ export default function WelcomePage() {
       setAttempted(true)
       return
     }
-    // Store agreement with timestamp
-    localStorage.setItem('stockly_terms_agreed', JSON.stringify({
-      agreed: true,
-      timestamp: new Date().toISOString(),
-      sessionId: crypto.randomUUID(),
-    }))
+    agreeToTerms()
     haptics.success()
     router.push('/onboarding/questions')
   }
