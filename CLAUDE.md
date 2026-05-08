@@ -1,76 +1,107 @@
 # Stockly — Gamified Stock Learning App
 
 ## Project Origin
-Originally built as "StockQuest" in a single Claude Code session. Rebranded and redesigned as **Stockly** in a subsequent session (2026-04-22). The vision is a Duolingo-style stock education platform built for people who were never given access to financial education — especially women, young adults, and first-gen wealth builders.
+Originally built as "StockQuest" in a single Claude Code session. Rebranded and redesigned as **Stockly** starting 2026-04-22. The vision is a Duolingo-style stock education platform built for people who were never given access to financial education — especially women, young adults, and first-gen wealth builders.
 
 ## What This App Is
-A mobile-first, beginner-friendly stock education app. Bright, playful, and welcoming — feels like playing, not studying. Users go through a disclaimer → mindset intro → placement test → personalized learning track. All state stored in localStorage, no backend required.
+A mobile-first, beginner-friendly stock education app. Bright, interactive, and welcoming — feels like playing, not studying. Full 14-screen onboarding flow routes users into a personalized learning track. All state stored in localStorage, no backend required.
 
 ## Brand
 - **Name**: Stockly
 - **Tagline**: Learning stocks, simplified.
-- **Tone**: Warm, conversational, judgment-free. Like a smart friend explaining things — not a professor.
-- **Inspired by**: Duolingo (interaction style), You Deserve to Be Rich (wealth mindset content)
-- **Mascot**: Planned — placeholder exists on home screen
+- **Tone**: Warm, professional, judgment-free. A smart friend explaining things — not a professor. No slang, no talking down.
+- **Inspired by**: Duolingo (interaction style, celebrations, streaks), You Deserve to Be Rich (wealth mindset content)
+- **Mascot**: Gender-neutral cute bull 🐂 — Duo energy. Full illustrated mascot TBD (commission a designer or use Fiverr/Adobe Express). Emoji placeholder currently in use.
+- **Logo**: SVG S-mark — purple ribbon S with candlestick charts overlaid, arrow at top. Lives in `components/StocklyLogo.tsx`. Used inline with "tockly" text as wordmark.
 
-## Color System
+## Color System — Money Moves Palette
 | Role | Color | Hex |
 |---|---|---|
-| Background | Soft Cream | `#FFF8F0` |
-| Surface / Cards | White | `#FFFFFF` |
-| Primary / Buttons | Electric Purple | `#7C3AED` |
-| Card Tint | Light Purple | `#EDE9FF` |
-| Button Accent | Hot Coral | `#FFD60A` |
-| Rewards / XP | Yellow | `#FFD609` |
-| Progress / Success | Cyan | `#00C2FF` |
-| Text Primary | Dark Navy Purple | `#1E1E2F` |
-| Text Muted | Muted Navy | `#6B6B8A` |
+| Background | Soft Black | `#0D0D0D` |
+| Surface / Cards | Dark Gray | `#1A1A1A` |
+| Primary / CTA | Hot Purple | `#8B00FF` |
+| Success / Highlight | Neon Green | `#39FF14` |
+| Text Primary | White | `#FFFFFF` |
+| Text Muted | Light Gray | `#A0A0A0` |
 | Error | Coral Red | `#FF6B6B` |
 
-Tailwind tokens: `brand-purple`, `brand-purple-light`, `brand-coral`, `brand-yellow`, `brand-cyan`, `brand-cream`, `brand-navy`, `brand-navy-muted`
+Tailwind tokens: `brand-black`, `brand-surface`, `brand-purple`, `brand-green`, `brand-white`, `brand-muted`, `brand-error`
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + PostCSS
+- **Animations**: Tailwind keyframes (slideUp, slideIn, logoReveal, shake, pop, bounce, float, fadein, greenGlow, pulseGlow)
+- **Confetti**: `canvas-confetti` — fires on correct answers, level ups, course ready screen
+- **Haptics**: Web Vibration API — `lib/haptics.ts` (tap, correct, wrong, levelUp, success patterns)
 - **Persistence**: localStorage only (key: `stockgame_v1`)
 - **Stock data**: Client-side simulation (no API needed)
 
 ## Location
-- Cloned from GitHub: `ns3smith-oss/stock-game`
+- GitHub: `ns3smith-oss/stock-game`
 - Local path: `~/stock-game`
 - Run: `cd ~/stock-game && npm run dev` → http://localhost:3000
 
-## Full User Flow
+## Full 14-Screen Onboarding Flow
 ```
-Home (/)
-  └─ Disclaimer (/disclaimer)
-       └─ Onboarding — 4 wealth mindset slides (/onboarding)
-            └─ Placement Test — 8 questions (/placement)
-                 └─ Result → routed to track
-                      ├─ Starter Track (/learn/starter)
-                      ├─ Builder Track (/learn/builder)
-                      └─ Leveler Track (/learn/leveler)
-                           └─ [All tracks] → Wealth Building Closer (coming soon)
+Screen 1:  Home (/) — splash loading animation → landing with S+tockly wordmark
+Screen 2:  Welcome + Terms (/welcome) — required checkbox, agreement timestamped to localStorage
+Screen 3:  Quick Questions (/onboarding/questions) — 5 questions, 4 options each, professional tone
+Screen 4:  What to Learn (/onboarding/goal) — 6 options (stocks, options, futures, portfolio, trends, all)
+Screen 5:  How Did You Find Us (/onboarding/referral) — 5 options, auto-advances
+Screen 6:  How Much Do You Know (/onboarding/level) — 4 options, saves track to localStorage
+Screen 7:  Why Are You Here (/onboarding/why) — 5 options including "nobody ever taught me"
+Screen 8:  Set Your Routine (/onboarding/routine) — 4 time-of-day options, auto-advances
+Screen 9:  Daily Goal (/onboarding/daily-goal) — 4 options with continue button
+Screen 10: Hype Screen (/onboarding/hype) — confetti + haptics, mascot celebrating, personalized message
+Screen 11: Plan Selection (/onboarding/plan) — Free vs Pro side by side
+Screen 12: Start Choice (/onboarding/start-choice) — basics vs test out
+Screen 13: Knowledge Check (/onboarding/knowledge-check) — 5 questions, confetti on correct, shake on wrong
+Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, personalized summary, Start Learning CTA
 ```
 
-## Placement Test
-8 questions, friendly conversational tone, no shame. Auto-advances on tap (400ms delay). Scores map to:
-- 0–4 pts → **Starter** ("Brand New")
-- 5–10 pts → **Builder** ("Curious & Learning")
-- 11+ pts → **Leveler** ("Ready to Level Up")
+## localStorage Keys (onboarding)
+| Key | Value |
+|---|---|
+| `stockly_terms_agreed` | `{ agreed, timestamp, sessionId }` — legal record of terms acceptance |
+| `stockly_quick_answers` | Array of 5 quick question answers |
+| `stockly_goal` | Selected learning goal |
+| `stockly_referral` | How they found Stockly |
+| `stockly_level` | `starter` / `builder` / `leveler` |
+| `stockly_why` | Why they're learning |
+| `stockly_routine` | Preferred learning time |
+| `stockly_daily_goal` | Daily time commitment |
+| `stockly_plan` | `free` / `pro` |
+| `stockly_start_choice` | `basics` / `test` |
+| `stockly_knowledge_score` | Score from knowledge check (0–5) |
 
-Question 7 (biggest fear) does not affect score — used for future personalization of lesson tone.
+## Interactivity System
+- **Haptics** (`lib/haptics.ts`): tap (10ms), correct (50ms), wrong (80-60-80ms), levelUp (100-50-100-50-200ms), success (50-30-100ms)
+- **Confetti** (`lib/celebrate.ts`): `celebrateCorrect()`, `celebrateLevelUp()`, `celebrateCourseReady()`
+- **Animations**: Shake on wrong answer, pop on selection, bounce on mascot, slideIn on new questions
+- **Button feedback**: All buttons have `active:scale-95` press feel
+
+## Plan Tiers
+**Free:**
+- Beginner stock crash course
+- Human language glossary
+- Basic concepts with visuals
+- 1–2 mock trading scenarios
+- Daily stock fact
+
+**Pro ($5.99/mo):**
+- Everything in Free
+- Advanced lessons & strategies
+- Full mock trading simulator
+- Weekly Insights newsletter
+- Personalized learning path
+- Goal tracker & risk calculator
+- Portfolio setup guide
+- "What if" tool
 
 ## Learning Track Content Plan
 
-### Onboarding Wealth Mindset Intro (4 slides — shown before placement test)
-1. Why most people never build wealth — and it's not their fault
-2. Rich vs. poor mindset
-3. Consumer vs. Builder
-4. Pay yourself first
-
-### Starter Track (9 lessons — not yet built)
+### Starter Track (9 lessons — placeholder page exists, content not yet built)
 1. What is a stock, really?
 2. What is the stock market and who's actually in it?
 3. Why do stock prices go up and down?
@@ -81,7 +112,7 @@ Question 7 (biggest fear) does not affect score — used for future personalizat
 8. What is risk and how do you think about it?
 9. Your first goal: what does "starting small" actually look like?
 
-### Builder Track (10 lessons — not yet built)
+### Builder Track (10 lessons — placeholder page exists, content not yet built)
 1. Quick recap: what you probably already know
 2. Types of investments — stocks, ETFs, index funds explained simply
 3. How to actually read a stock page
@@ -93,7 +124,7 @@ Question 7 (biggest fear) does not affect score — used for future personalizat
 9. How to make your first trade without panicking
 10. Building a simple beginner portfolio from scratch
 
-### Leveler Track (10 lessons — not yet built)
+### Leveler Track (10 lessons — placeholder page exists, content not yet built)
 1. How to read a basic price chart
 2. Support and resistance
 3. What is volume telling you?
@@ -105,41 +136,50 @@ Question 7 (biggest fear) does not affect score — used for future personalizat
 9. What market cycles look like and how to use them
 10. Building a real strategy that fits your life and goals
 
-### Wealth Building Closer (6 lessons — unlocks after all tracks, not yet built)
-5. The difference between an asset and a liability
-6. How the wealthy use the stock market as a tool, not a gamble
-7. Saving with purpose — emergency fund, investment fund, spending money
-8. Compound interest — why starting early beats starting big
-9. Generational wealth — what it is and how regular people build it
-10. Your next step — you have the knowledge, now build the habit
-
-## Disclaimer
-Shown as a dedicated screen before onboarding. User must tap "I understand" to proceed. Plain language — not fine print. Covers: education not advice, trading involves real risk, Stockly is in your corner.
+### Wealth Building Closer (6 lessons — not yet built, unlocks after all tracks)
+1. The difference between an asset and a liability
+2. How the wealthy use the stock market as a tool, not a gamble
+3. Saving with purpose — emergency fund, investment fund, spending money
+4. Compound interest — why starting early beats starting big
+5. Generational wealth — what it is and how regular people build it
+6. Your next step — you have the knowledge, now build the habit
 
 ## Project Structure
 ```
 stock-game/
 ├── app/
-│   ├── layout.tsx              # Root layout — mounts XPBar, brand-purple bg
-│   ├── page.tsx                # Home — logo, tagline, mascot placeholder, CTA
-│   ├── globals.css             # Tailwind directives + iOS overscroll fix
-│   ├── disclaimer/page.tsx     # Disclaimer screen — must acknowledge to continue
-│   ├── onboarding/page.tsx     # 4 wealth mindset slides before placement test
-│   ├── placement/page.tsx      # 8-question placement test → routes to track
+│   ├── layout.tsx                          # Root layout — brand-black bg, no XPBar on onboarding
+│   ├── page.tsx                            # Home — splash animation + landing with S+tockly wordmark
+│   ├── globals.css
+│   ├── welcome/page.tsx                    # Screen 2 — terms checkbox, timestamped agreement
+│   ├── onboarding/
+│   │   ├── questions/page.tsx              # Screen 3 — 5 quick questions
+│   │   ├── goal/page.tsx                   # Screen 4 — what to learn
+│   │   ├── referral/page.tsx               # Screen 5 — how did you find us
+│   │   ├── level/page.tsx                  # Screen 6 — how much do you know
+│   │   ├── why/page.tsx                    # Screen 7 — why are you learning
+│   │   ├── routine/page.tsx                # Screen 8 — when do you learn
+│   │   ├── daily-goal/page.tsx             # Screen 9 — daily time goal
+│   │   ├── hype/page.tsx                   # Screen 10 — celebration + encouragement
+│   │   ├── plan/page.tsx                   # Screen 11 — free vs pro
+│   │   ├── start-choice/page.tsx           # Screen 12 — basics vs test out
+│   │   ├── knowledge-check/page.tsx        # Screen 13 — 5-question knowledge quiz
+│   │   └── course-ready/page.tsx           # Screen 14 — personalized course reveal
 │   ├── learn/
-│   │   ├── starter/page.tsx    # Starter track (placeholder)
-│   │   ├── builder/page.tsx    # Builder track (placeholder)
-│   │   └── leveler/page.tsx    # Leveler track (placeholder)
-│   ├── lesson/page.tsx         # Legacy lesson module (to be replaced)
-│   ├── simulator/page.tsx      # Trading simulator (to be redesigned)
-│   └── challenge/page.tsx      # Scenario challenge (to be redesigned)
+│   │   ├── starter/page.tsx                # Starter track (placeholder)
+│   │   ├── builder/page.tsx                # Builder track (placeholder)
+│   │   └── leveler/page.tsx                # Leveler track (placeholder)
+│   ├── lesson/page.tsx                     # Legacy — to be replaced
+│   ├── simulator/page.tsx                  # Legacy — to be redesigned
+│   └── challenge/page.tsx                  # Legacy — to be redesigned
 ├── components/
+│   ├── StocklyLogo.tsx                     # SVG S-mark logo — purple ribbon S + candlesticks
 │   ├── ui/
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
 │   │   ├── ProgressBar.tsx
 │   │   └── Badge.tsx
-│   ├── XPBar.tsx               # Fixed top bar — updated to Stockly colors
+│   ├── XPBar.tsx
 │   ├── XPPopup.tsx
 │   ├── LevelUpModal.tsx
 │   ├── ModuleCard.tsx
@@ -154,6 +194,8 @@ stock-game/
 │   ├── useGameState.ts
 │   └── useStockTicker.ts
 ├── lib/
+│   ├── haptics.ts                          # Web Vibration API utility
+│   ├── celebrate.ts                        # canvas-confetti celebrations
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
 │   ├── constants.ts
@@ -165,24 +207,21 @@ stock-game/
 └── tsconfig.json
 ```
 
-## XP System
-- Thresholds: `[0, 50, 120, 220, 350]` (index = level number)
-- XPBar visible on every page via layout.tsx
-
 ## Key Architecture Decisions
 - **No backend** — zero infrastructure, works offline
 - **SSR-safe** — all localStorage reads inside useEffect or guarded with `typeof window !== 'undefined'`
+- **Terms stored with timestamp + UUID** — `stockly_terms_agreed` provides legal proof of agreement
 - **Pure functions** — `lib/gameState.ts` has zero React imports
 - **Storage key versioned** — `stockgame_v1`
 
 ## What To Do Next
-1. Build out Starter track lessons (9 lessons, tap-through format)
-2. Build out Builder and Leveler track lessons
-3. Redesign simulator with Stockly color system
-4. Add mascot to home screen when character is decided
-5. Build Wealth Building closer track
+1. Build Starter track lessons (9 lessons, Duolingo-style tap-through with haptics + confetti)
+2. Build Builder and Leveler track lessons
+3. Build Wealth Building closer track
+4. Redesign legacy simulator + challenge pages with Money Moves color system
+5. Commission final bull mascot illustration
 6. Deploy to Vercel
 
 ---
-*Last updated: 2026-04-26 — New color system applied (cream bg, electric purple, cyan progress, coral XP badge) across all screens*
+*Last updated: 2026-05-07 — Full 14-screen onboarding built, Money Moves color system, S+tockly logo, haptics, confetti, loading splash*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
