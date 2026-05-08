@@ -166,7 +166,8 @@ stock-game/
 │   │   ├── knowledge-check/page.tsx        # Screen 13 — 5-question knowledge quiz
 │   │   └── course-ready/page.tsx           # Screen 14 — personalized course reveal
 │   ├── learn/
-│   │   ├── starter/page.tsx                # Starter track (placeholder)
+│   │   ├── starter/page.tsx                # Starter track — unit map with sequential lesson unlock
+│   │   ├── starter/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   │   ├── builder/page.tsx                # Builder track (placeholder)
 │   │   └── leveler/page.tsx                # Leveler track (placeholder)
 │   ├── lesson/page.tsx                     # Legacy — to be replaced
@@ -184,6 +185,7 @@ stock-game/
 │   ├── LevelUpModal.tsx
 │   ├── ModuleCard.tsx
 │   ├── LessonCard.tsx
+│   ├── LessonPlayer.tsx                    # Lesson slide renderer — all 6 slide types, haptics, confetti
 │   ├── LessonFlow.tsx
 │   ├── StockChart.tsx
 │   ├── Portfolio.tsx
@@ -196,6 +198,7 @@ stock-game/
 ├── lib/
 │   ├── haptics.ts                          # Web Vibration API utility
 │   ├── celebrate.ts                        # canvas-confetti celebrations
+│   ├── starter-lessons.ts                  # All Starter track lesson data — 4 units, 17 lessons
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
 │   ├── constants.ts
@@ -214,14 +217,54 @@ stock-game/
 - **Pure functions** — `lib/gameState.ts` has zero React imports
 - **Storage key versioned** — `stockgame_v1`
 
+## Lesson System — Starter Track (BUILT)
+
+### Data (`lib/starter-lessons.ts`)
+- TypeScript interfaces: `SlideType`, `QuizSlide`, `Slide`, `Lesson`, `Unit`
+- `STARTER_UNITS` array — 4 units, 17 lessons, fully written educational content
+- Unit 1: What is a Stock? (pizza shop analogy, real ownership, IPOs, unit quiz)
+- Unit 2: How the Market Works (NYSE/Nasdaq, buyers/sellers, price movement, unit quiz)
+- Unit 3: Getting Started (brokers, SIPC protection, how to buy, portfolios, ETFs, unit quiz)
+- Unit 4: Money & Risk (saving vs investing, inflation, fear/crashes, 1-2% rule, DCA, fractional shares, final quiz)
+
+### Slide Types
+`'intro'` | `'text'` | `'fact'` | `'tap-reveal'` | `'quiz'` | `'complete'`
+
+### LessonPlayer Component (`components/LessonPlayer.tsx`)
+- Renders all 6 slide types with animations
+- Progress bar at top, haptics on every interaction
+- Confetti (`celebrateCorrect()`) on correct quiz answers, shake animation on wrong
+- Continue button disabled until required interaction (tap-reveal = must tap, quiz = must answer)
+- Props: `lesson`, `onComplete(xp)`, `backHref`
+
+### Starter Track Home (`app/learn/starter/page.tsx`)
+- Shows all 4 units with colored section headers
+- Lesson nodes: locked (🔒) → available → complete (✅)
+- Lessons unlock sequentially — complete one to unlock the next
+- Overall progress bar with % complete + lesson count
+- Progress stored in `stockly_starter_progress` (localStorage)
+
+### Lesson Route (`app/learn/starter/lesson/[lessonId]/page.tsx`)
+- Dynamic route — looks up lesson by ID from `STARTER_UNITS`
+- On complete: saves to `stockly_starter_progress`, adds XP to `stockly_starter_xp`
+- Milestone celebration at 100 XP (haptics.levelUp + celebrateLevelUp)
+- Routes back to `/learn/starter` on completion
+
+### localStorage Keys (lesson progress)
+| Key | Value |
+|---|---|
+| `stockly_starter_progress` | `{ [lessonId]: true }` — which lessons are complete |
+| `stockly_starter_xp` | Total XP earned in starter track (number string) |
+
 ## What To Do Next
-1. Build Starter track lessons (9 lessons, Duolingo-style tap-through with haptics + confetti)
-2. Build Builder and Leveler track lessons
-3. Build Wealth Building closer track
-4. Redesign legacy simulator + challenge pages with Money Moves color system
-5. Commission final bull mascot illustration
-6. Deploy to Vercel
+1. Build Builder and Leveler track lesson content + routes (same pattern as Starter)
+2. Build Wealth Building closer track (unlocks after all tracks)
+3. Wire `enrollmentComplete` flag when all starter lessons are done
+4. Add XP display / streak counter to track home header
+5. Redesign legacy simulator + challenge pages with Money Moves color system
+6. Commission final bull mascot illustration
+7. Deploy to Vercel
 
 ---
-*Last updated: 2026-05-07 — Full 14-screen onboarding built, Money Moves color system, S+tockly logo, haptics, confetti, loading splash*
+*Last updated: 2026-05-07 — Starter track fully built: 17 lessons across 4 units, LessonPlayer component, sequential unlock system, XP tracking*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
