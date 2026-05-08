@@ -71,15 +71,26 @@ export const STARTER_UNITS: Unit[] = [
             body: "She divides her pizza shop into 100 equal pieces and sells each piece for $100. That way she raises the $10,000 she needs. Each piece she sells is called a share of stock.",
           },
           {
+            type: 'text',
+            emoji: '🤝',
+            heading: 'You buy a piece',
+            body: "You buy 1 piece for $100. Now you own 1% of her pizza shop. If the shop takes off and becomes worth $20,000 next year — your piece is now worth $200. You just doubled your money.",
+          },
+          {
             type: 'chart-demo',
             heading: 'Place your first order',
             demoType: 'company-split',
           },
           {
-            type: 'text',
-            emoji: '🤝',
-            heading: 'You buy a piece',
-            body: "You buy 1 piece for $100. Now you own 1% of her pizza shop. If the shop takes off and becomes worth $20,000 next year — your piece is now worth $200. You just doubled your money.",
+            type: 'quiz',
+            emoji: '🧠',
+            heading: 'Now you try it',
+            quiz: {
+              question: "Your friend's pizza shop has 100 shares. You buy 5 shares. What percentage of the shop do you own?",
+              options: ['1%', '5%', '10%', '50%'],
+              correctIndex: 1,
+              explanation: "5 shares out of 100 total = 5%. Just like the order you just placed — the more shares you own, the bigger your piece of the company.",
+            },
           },
           {
             type: 'tap-reveal',
@@ -87,17 +98,6 @@ export const STARTER_UNITS: Unit[] = [
             heading: 'So what IS a stock?',
             body: 'Tap to reveal the answer.',
             tapReveal: "A stock is a small piece of ownership in a real company. When you buy stock, you're not gambling on a number — you're becoming a part-owner of that business.",
-          },
-          {
-            type: 'quiz',
-            emoji: '🧠',
-            heading: 'Quick check!',
-            quiz: {
-              question: "Your friend's pizza shop has 100 shares. You buy 5 shares. What percentage of the shop do you own?",
-              options: ['1%', '5%', '10%', '50%'],
-              correctIndex: 1,
-              explanation: "5 shares out of 100 total = 5%. The more shares you own, the bigger your piece of the company.",
-            },
           },
           {
             type: 'complete',
