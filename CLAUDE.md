@@ -101,30 +101,18 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 
 ## Learning Track Content Plan
 
-### Starter Track (9 lessons — placeholder page exists, content not yet built)
-1. What is a stock, really?
-2. What is the stock market and who's actually in it?
-3. Why do stock prices go up and down?
-4. What is a broker and how do you actually buy a stock?
-5. What is a portfolio?
-6. The difference between saving money and investing money
-7. Why people are scared of investing — and why that makes sense
-8. What is risk and how do you think about it?
-9. Your first goal: what does "starting small" actually look like?
+### Starter Track ✅ BUILT — 4 units, 17 lessons, 4 interactive demos
+- Unit 1: What is a Stock? (pizza shop analogy + order ticket demo, real ownership, IPOs, unit quiz)
+- Unit 2: How the Market Works (market overview, supply/demand demo, price movement, unit quiz)
+- Unit 3: Getting Started (brokers, how to buy, portfolios, ETFs, unit quiz)
+- Unit 4: Money & Risk (saving vs investing + growth demo, fear, risk, DCA demo + starting small, final quiz)
 
-### Builder Track (10 lessons — placeholder page exists, content not yet built)
-1. Quick recap: what you probably already know
-2. Types of investments — stocks, ETFs, index funds explained simply
-3. How to actually read a stock page
-4. What is a bull and bear market?
-5. How to research a company before buying
-6. What is diversification and why does it protect you?
-7. Understanding risk vs reward
-8. What is a limit order vs a market order?
-9. How to make your first trade without panicking
-10. Building a simple beginner portfolio from scratch
+### Builder Track ✅ BUILT — 3 units, 13 lessons, 3 interactive demos
+- Unit 1: Know Your Investments (recap, types of investments, stock page + 52-week range demo, unit quiz)
+- Unit 2: Reading the Market (bull/bear + phase chart demo, company research, diversification, unit quiz)
+- Unit 3: Making Your Move (risk/reward, orders, first trade, portfolio + diversification demo, final quiz)
 
-### Leveler Track (10 lessons — placeholder page exists, content not yet built)
+### Leveler Track ⏳ NOT YET BUILT — placeholder page exists
 1. How to read a basic price chart
 2. Support and resistance
 3. What is volume telling you?
@@ -136,7 +124,7 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 9. What market cycles look like and how to use them
 10. Building a real strategy that fits your life and goals
 
-### Wealth Building Closer (6 lessons — not yet built, unlocks after all tracks)
+### Wealth Building Closer ⏳ NOT YET BUILT — unlocks after all tracks
 1. The difference between an asset and a liability
 2. How the wealthy use the stock market as a tool, not a gamble
 3. Saving with purpose — emergency fund, investment fund, spending money
@@ -191,8 +179,9 @@ stock-game/
 │   ├── LevelUpModal.tsx
 │   ├── ModuleCard.tsx
 │   ├── LessonCard.tsx
-│   ├── LessonPlayer.tsx                    # Lesson slide renderer — all 6 slide types, haptics, confetti
-│   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — all main navigation links
+│   ├── LessonPlayer.tsx                    # Lesson slide renderer — all 7 slide types, haptics, confetti
+│   ├── DemoSlide.tsx                       # 7 interactive demos: order ticket, supply/demand, growth, DCA, price range, bull/bear, portfolio
+│   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — dashboard only
 │   ├── LessonFlow.tsx
 │   ├── StockChart.tsx
 │   ├── Portfolio.tsx
@@ -205,7 +194,8 @@ stock-game/
 ├── lib/
 │   ├── haptics.ts                          # Web Vibration API utility
 │   ├── celebrate.ts                        # canvas-confetti celebrations
-│   ├── starter-lessons.ts                  # All Starter track lesson data — 4 units, 17 lessons
+│   ├── starter-lessons.ts                  # Starter track — 4 units, 17 lessons, shared Slide/Lesson/Unit interfaces
+│   ├── builder-lessons.ts                  # Builder track — 3 units, 13 lessons
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
 │   ├── constants.ts
@@ -235,14 +225,44 @@ stock-game/
 - Unit 4: Money & Risk (saving vs investing, inflation, fear/crashes, 1-2% rule, DCA, fractional shares, final quiz)
 
 ### Slide Types
-`'intro'` | `'text'` | `'fact'` | `'tap-reveal'` | `'quiz'` | `'complete'`
+`'intro'` | `'text'` | `'fact'` | `'tap-reveal'` | `'quiz'` | `'complete'` | `'chart-demo'`
+
+`chart-demo` slides reference a `demoType` string that maps to a self-contained interactive component in `DemoSlide.tsx`. Always advanceable (no gate).
 
 ### LessonPlayer Component (`components/LessonPlayer.tsx`)
-- Renders all 6 slide types with animations
+- Renders all 7 slide types with animations
 - Progress bar at top, haptics on every interaction
 - Confetti (`celebrateCorrect()`) on correct quiz answers, shake animation on wrong
 - Continue button disabled until required interaction (tap-reveal = must tap, quiz = must answer)
 - Props: `lesson`, `onComplete(xp)`, `backHref`
+
+### Interactive Demo Slides (`components/DemoSlide.tsx`)
+7 self-contained interactive demos inserted after key explanatory slides:
+
+| demoType | Lesson | What the user does |
+|---|---|---|
+| `company-split` | Pizza Shop | Order ticket for Pizza Shop Inc. — enter 5 of 100 shares, see ownership math live, review + confirm order |
+| `supply-demand` | Who's Buying & Selling | Add buyers/sellers, watch price direction animate in real time |
+| `savings-vs-investing` | Saving vs Investing | Drag 30-year slider, watch investing bar dwarf savings bar |
+| `dca` | Starting Small | Tap to invest $50 each week, average cost calculates live |
+| `price-range` | Read a Stock Page | Tap Low/Mid/High, price marker slides along 52-week range |
+| `bull-bear` | Bull vs Bear Markets | Tap through all 4 market phases, mini SVG chart redraws |
+| `portfolio-bars` | Building a Portfolio | Toggle diversification, watch risk meter change color |
+
+**Order ticket demo specifics** (`company-split`):
+- Purple callout: "100 total shares. Buy 5 to see what you own."
+- Input turns green + checkmark when user hits target (5)
+- Live panel shows `{x} ÷ 100 shares` math as they type
+- Review screen: "Shares buying: 5 of 100" + ownership calc
+- Confirmed screen: callout connects to the quiz that follows
+- Pizza Shop lesson reordered: explain → demo → quiz → tap-reveal → complete
+
+### Builder Track (BUILT — `lib/builder-lessons.ts`)
+- 3 units, 13 lessons covering: investment types, reading stock pages, bull/bear markets, company research, diversification, risk/reward, order types, first trade, portfolio building
+- Same sequential unlock system, XP tracking (`stockly_builder_xp`), progress (`stockly_builder_progress`)
+- Track home: `app/learn/builder/page.tsx` — hamburger removed, ✕ routes to `/learn`
+- Lesson route: `app/learn/builder/lesson/[lessonId]/page.tsx`
+- Final lesson ID: `b3-l5`
 
 ### Starter Track Home (`app/learn/starter/page.tsx`)
 - Shows all 4 units with colored section headers
@@ -302,5 +322,5 @@ stock-game/
 6. Deploy to Vercel
 
 ---
-*Last updated: 2026-05-08 — Builder track built (13 lessons), /learn dashboard, HamburgerMenu with full nav, Glossary (60+ terms), About/Contact/Settings pages, getResumeRoute updated to land on /learn*
+*Last updated: 2026-05-08 — Interactive demo slides added (7 demos, DemoSlide.tsx), order ticket tied to 5-of-100 quiz, Pizza Shop lesson reordered, Glossary updated with Ceiling, HamburgerMenu on dashboard only*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
