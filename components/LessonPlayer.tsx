@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { haptics } from '@/lib/haptics'
 import { celebrateCorrect } from '@/lib/celebrate'
 import type { Lesson, Slide } from '@/lib/starter-lessons'
+import { DemoSlide } from '@/components/DemoSlide'
 
 interface LessonPlayerProps {
   lesson: Lesson
@@ -152,6 +153,9 @@ export function LessonPlayer({ lesson, onComplete, backHref }: LessonPlayerProps
           </div>
         )
 
+      case 'chart-demo':
+        return <DemoSlide demoType={s.demoType!} heading={s.heading} />
+
       case 'complete':
         return (
           <div className="flex flex-col items-center text-center gap-6 animate-levelBurst">
@@ -175,6 +179,7 @@ export function LessonPlayer({ lesson, onComplete, backHref }: LessonPlayerProps
     slide.type === 'tap-reveal' ? tapped :
     slide.type === 'quiz' ? revealed :
     true
+
 
   return (
     <div className="max-w-sm mx-auto px-6 py-6 flex flex-col min-h-screen">

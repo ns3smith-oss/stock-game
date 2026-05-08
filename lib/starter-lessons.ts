@@ -1,4 +1,4 @@
-export type SlideType = 'intro' | 'text' | 'fact' | 'tap-reveal' | 'quiz' | 'complete'
+export type SlideType = 'intro' | 'text' | 'fact' | 'tap-reveal' | 'quiz' | 'complete' | 'chart-demo'
 
 export interface QuizSlide {
   question: string
@@ -15,6 +15,7 @@ export interface Slide {
   tapReveal?: string
   quiz?: QuizSlide
   xpReward?: number
+  demoType?: string
 }
 
 export interface Lesson {
@@ -68,6 +69,11 @@ export const STARTER_UNITS: Unit[] = [
             emoji: '✂️',
             heading: 'She splits the shop into pieces',
             body: "She divides her pizza shop into 100 equal pieces and sells each piece for $100. That way she raises the $10,000 she needs. Each piece she sells is called a share of stock.",
+          },
+          {
+            type: 'chart-demo',
+            heading: 'Buy your shares',
+            demoType: 'company-split',
           },
           {
             type: 'text',
@@ -409,6 +415,11 @@ export const STARTER_UNITS: Unit[] = [
             emoji: '⚖️',
             heading: 'Supply and demand drives everything',
             body: "Every trade has a buyer and a seller. When more people want to buy a stock than sell it, the price goes up. When more people want to sell than buy, the price goes down. That's it.",
+          },
+          {
+            type: 'chart-demo',
+            heading: 'See it in action',
+            demoType: 'supply-demand',
           },
           {
             type: 'quiz',
@@ -904,6 +915,11 @@ export const STARTER_UNITS: Unit[] = [
             body: "The S&P 500 has averaged about 10% returns per year over the last 50 years. $1,000 invested and left alone for 30 years becomes roughly $17,000. That's the power of letting money work for you.",
           },
           {
+            type: 'chart-demo',
+            heading: 'Drag the slider and watch the difference',
+            demoType: 'savings-vs-investing',
+          },
+          {
             type: 'text',
             emoji: '⚖️',
             heading: 'The balance',
@@ -1075,6 +1091,11 @@ export const STARTER_UNITS: Unit[] = [
             emoji: '📅',
             heading: 'Dollar-cost averaging',
             body: "Instead of trying to time the market perfectly, invest a fixed amount regularly — say $25 every week regardless of price. Sometimes you'll buy high, sometimes low. Over time it averages out and removes the pressure of guessing the perfect moment.",
+          },
+          {
+            type: 'chart-demo',
+            heading: 'Invest $50 each week — watch your average cost',
+            demoType: 'dca',
           },
           {
             type: 'fact',

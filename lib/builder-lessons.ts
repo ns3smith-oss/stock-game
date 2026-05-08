@@ -166,6 +166,11 @@ export const BUILDER_UNITS: Unit[] = [
             body: "This shows the highest and lowest price the stock has traded in the past year. If a stock is near its 52-week low, it may be a discount. Near its 52-week high means it's been strong — but it might also be overpriced.",
           },
           {
+            type: 'chart-demo',
+            heading: 'Where is the price in its yearly range?',
+            demoType: 'price-range',
+          },
+          {
             type: 'fact',
             emoji: '🔢',
             heading: 'Market cap — the company\'s total size',
@@ -342,6 +347,11 @@ export const BUILDER_UNITS: Unit[] = [
             emoji: '🌊',
             heading: 'Corrections — smaller pullbacks',
             body: "A correction is a drop of 10–20%. These are even more common than bear markets — they happen almost every year and are completely normal. Most corrections reverse within a few months. New investors often panic during corrections unnecessarily.",
+          },
+          {
+            type: 'chart-demo',
+            heading: 'See what each phase looks like',
+            demoType: 'bull-bear',
           },
           {
             type: 'tap-reveal',
@@ -849,6 +859,11 @@ export const BUILDER_UNITS: Unit[] = [
             heading: 'Sample beginner portfolio',
             body: 'Tap to see an example.',
             tapReveal: "Example $1,000 portfolio: $600 in VOO (S&P 500 ETF), $150 in a tech ETF like QQQ, $150 spread across 2–3 individual stocks you've researched, $100 in cash. Simple, diversified, low-maintenance — and you understand every piece of it.",
+          },
+          {
+            type: 'chart-demo',
+            heading: 'Watch what diversification does to your risk',
+            demoType: 'portfolio-bars',
           },
           {
             type: 'quiz',
