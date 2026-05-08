@@ -114,7 +114,7 @@ export function signOut(): void {
 
 // Returns where a returning user should be routed after sign in
 export function getResumeRoute(user: StocklyUser): string {
-  if (user.enrollmentComplete && user.track) return `/learn/${user.track}`
+  if (user.enrollmentComplete) return '/learn'
   if (!user.termsAgreed) return '/welcome'
   return user.onboardingStep || '/onboarding/questions'
 }

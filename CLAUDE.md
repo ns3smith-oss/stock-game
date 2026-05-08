@@ -166,10 +166,16 @@ stock-game/
 │   │   ├── knowledge-check/page.tsx        # Screen 13 — 5-question knowledge quiz
 │   │   └── course-ready/page.tsx           # Screen 14 — personalized course reveal
 │   ├── learn/
+│   │   ├── page.tsx                        # Main dashboard — all tracks, lock/unlock, XP totals
 │   │   ├── starter/page.tsx                # Starter track — unit map with sequential lesson unlock
 │   │   ├── starter/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
-│   │   ├── builder/page.tsx                # Builder track (placeholder)
+│   │   ├── builder/page.tsx                # Builder track — unit map with sequential lesson unlock
+│   │   ├── builder/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   │   └── leveler/page.tsx                # Leveler track (placeholder)
+│   ├── glossary/page.tsx                   # 60+ stock terms, searchable, filterable by category
+│   ├── about/page.tsx                      # About Stockly
+│   ├── contact/page.tsx                    # Contact form
+│   └── settings/page.tsx                   # Name edit, plan, reset progress, sign out
 │   ├── lesson/page.tsx                     # Legacy — to be replaced
 │   ├── simulator/page.tsx                  # Legacy — to be redesigned
 │   └── challenge/page.tsx                  # Legacy — to be redesigned
@@ -186,6 +192,7 @@ stock-game/
 │   ├── ModuleCard.tsx
 │   ├── LessonCard.tsx
 │   ├── LessonPlayer.tsx                    # Lesson slide renderer — all 6 slide types, haptics, confetti
+│   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — all main navigation links
 │   ├── LessonFlow.tsx
 │   ├── StockChart.tsx
 │   ├── Portfolio.tsx
@@ -256,15 +263,44 @@ stock-game/
 | `stockly_starter_progress` | `{ [lessonId]: true }` — which lessons are complete |
 | `stockly_starter_xp` | Total XP earned in starter track (number string) |
 
+## Navigation System (BUILT)
+
+### `/learn` Dashboard (`app/learn/page.tsx`)
+- Main menu showing all 4 tracks as cards: Starter, Builder, Leveler, Wealth Building
+- Lock/unlock logic:
+  - Starter: always available
+  - Builder: unlocks if `stockly_level` is `builder`/`leveler` OR starter final lesson (`u4-l5`) is complete
+  - Leveler: unlocks if `stockly_level` is `leveler` OR builder final lesson (`b3-l5`) is complete
+  - Wealth: unlocks after leveler final lesson (`lv3-l5`) is complete
+- Per-track progress bars + XP display, total XP in header
+- "Coming Soon" badge for tracks not yet built
+
+### `HamburgerMenu` Component (`components/HamburgerMenu.tsx`)
+- Slide-in drawer from left, backdrop tap to close
+- Shows user name + Free/Pro plan badge
+- Links: My Tracks → `/learn`, Upgrade to Pro → `/onboarding/plan`, Glossary → `/glossary`, Settings → `/settings`, About → `/about`, Contact → `/contact`
+- Sign Out at the bottom (calls `signOut()`, routes to `/`)
+
+### Supporting Pages
+- `/glossary` — 60+ terms across 6 categories (Basics, Market, Trading, Analysis, Risk, Advanced). Searchable + filterable by category. Accordion expand.
+- `/about` — Mission and what Stockly does
+- `/contact` — Contact form + direct email
+- `/settings` — Name edit, plan display, reset progress, sign out
+
+### `getResumeRoute()` updated
+- Enrolled users now always land on `/learn` dashboard instead of a specific track
+
+### Track ✕ buttons
+- Both Starter and Builder track home pages now route ✕ → `/learn`
+
 ## What To Do Next
-1. Build Builder and Leveler track lesson content + routes (same pattern as Starter)
-2. Build Wealth Building closer track (unlocks after all tracks)
-3. Wire `enrollmentComplete` flag when all starter lessons are done
-4. Add XP display / streak counter to track home header
-5. Redesign legacy simulator + challenge pages with Money Moves color system
-6. Commission final bull mascot illustration
-7. Deploy to Vercel
+1. Build Leveler track lesson content + routes (same pattern as Starter/Builder)
+2. Build Wealth Building closer track (unlocks after Leveler)
+3. Wire `enrollmentComplete` flag after all lessons in a track are done
+4. Redesign legacy simulator + challenge pages with Money Moves color system
+5. Commission final bull mascot illustration
+6. Deploy to Vercel
 
 ---
-*Last updated: 2026-05-07 — Starter track fully built: 17 lessons across 4 units, LessonPlayer component, sequential unlock system, XP tracking*
+*Last updated: 2026-05-08 — Builder track built (13 lessons), /learn dashboard, HamburgerMenu with full nav, Glossary (60+ terms), About/Contact/Settings pages, getResumeRoute updated to land on /learn*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
