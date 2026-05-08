@@ -78,7 +78,7 @@ export const STARTER_UNITS: Unit[] = [
           },
           {
             type: 'chart-demo',
-            heading: 'Place your first order',
+            heading: 'The shop has 100 shares — buy 5',
             demoType: 'company-split',
           },
           {

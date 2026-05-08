@@ -7,7 +7,7 @@ import { haptics } from '@/lib/haptics'
 function PlaceOrderDemo() {
   const PRICE_PER_SHARE = 100
   const TOTAL_SHARES = 100
-  const TARGET = 20
+  const TARGET = 5
 
   const [qty, setQty] = useState('')
   const [stage, setStage] = useState<'order' | 'review' | 'confirmed'>('order')
@@ -15,7 +15,8 @@ function PlaceOrderDemo() {
   const parsed = parseInt(qty, 10)
   const validQty = !isNaN(parsed) && parsed > 0 && parsed <= TOTAL_SHARES
   const total = validQty ? parsed * PRICE_PER_SHARE : 0
-  const ownership = validQty ? ((parsed / TOTAL_SHARES) * 100).toFixed(0) : '0'
+  const ownershipNum = validQty ? (parsed / TOTAL_SHARES) * 100 : 0
+  const ownership = Number.isInteger(ownershipNum) ? ownershipNum.toString() : ownershipNum.toFixed(1)
   const isTarget = parsed === TARGET
 
   function handleReview() {
@@ -39,13 +40,17 @@ function PlaceOrderDemo() {
     return (
       <div className="flex flex-col items-center gap-4 animate-slideUp">
         <div className="text-6xl animate-bounce">🎉</div>
-        <div className="w-full bg-brand-green/20 border-2 border-brand-green rounded-3xl p-5 text-center">
-          <p className="text-brand-green font-black text-2xl">Order Filled!</p>
-          <p className="text-brand-white font-bold text-base mt-1">{parsed} shares of PIZZA</p>
+        <div className="w-full bg-brand-green/20 border-2 border-brand-green rounded-3xl p-5">
+          <p className="text-brand-green font-black text-2xl text-center">Order Filled!</p>
+          <p className="text-brand-white font-bold text-base text-center mt-1">{parsed} shares of PIZZA</p>
           <div className="h-px bg-white/10 my-3" />
           <div className="flex justify-between text-sm">
             <span className="text-brand-muted">Shares purchased</span>
             <span className="text-brand-white font-bold">{parsed}</span>
+          </div>
+          <div className="flex justify-between text-sm mt-1">
+            <span className="text-brand-muted">Total shares in company</span>
+            <span className="text-brand-white font-bold">{TOTAL_SHARES}</span>
           </div>
           <div className="flex justify-between text-sm mt-1">
             <span className="text-brand-muted">Price per share</span>
@@ -55,19 +60,23 @@ function PlaceOrderDemo() {
             <span className="text-brand-muted">Total paid</span>
             <span className="text-brand-white font-bold">${total.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-sm mt-1">
-            <span className="text-brand-muted">Your ownership</span>
-            <span className="text-brand-green font-black">{ownership}%</span>
+          <div className="h-px bg-white/10 my-3" />
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-brand-muted text-xs">Your ownership</p>
+              <p className="text-brand-muted text-xs mt-0.5">{parsed} ÷ {TOTAL_SHARES} shares</p>
+            </div>
+            <span className="text-brand-green font-black text-3xl">{ownership}%</span>
           </div>
         </div>
         {isTarget && (
-          <div className="bg-brand-purple/20 border border-brand-purple rounded-2xl px-4 py-3 text-center">
+          <div className="bg-brand-purple/20 border border-brand-purple rounded-2xl px-4 py-3 text-center animate-slideUp">
             <p className="text-brand-purple font-bold text-sm">
-              You bought 20 of 100 shares — you own 20% of the pizza shop. 🍕
+              5 shares out of 100 = 5%. That's exactly the math the next question will test you on. 🍕
             </p>
           </div>
         )}
-        <button onClick={handleReset} className="text-brand-muted text-xs underline">Place another order</button>
+        <button onClick={handleReset} className="text-brand-muted text-xs underline">Try a different amount</button>
       </div>
     )
   }
@@ -92,8 +101,8 @@ function PlaceOrderDemo() {
               <span className="text-brand-white font-bold text-sm">Market Order</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-brand-muted text-sm">Shares</span>
-              <span className="text-brand-white font-bold text-sm">{parsed}</span>
+              <span className="text-brand-muted text-sm">Shares buying</span>
+              <span className="text-brand-white font-bold text-sm">{parsed} of {TOTAL_SHARES}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-brand-muted text-sm">Est. price/share</span>
@@ -103,6 +112,10 @@ function PlaceOrderDemo() {
             <div className="flex justify-between">
               <span className="text-brand-white font-bold text-sm">Est. total</span>
               <span className="text-brand-green font-black text-base">${total.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-brand-muted text-sm">Ownership ({parsed} ÷ {TOTAL_SHARES})</span>
+              <span className="text-brand-green font-black text-xl">{ownership}%</span>
             </div>
           </div>
         </div>
@@ -122,12 +135,19 @@ function PlaceOrderDemo() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Context callout */}
+      <div className="bg-brand-purple/20 border border-brand-purple/50 rounded-2xl px-4 py-3">
+        <p className="text-brand-white text-sm font-semibold text-center">
+          🍕 Pizza Shop Inc. has <span className="text-brand-purple font-black">100 total shares</span>. Buy 5 shares to see what you own.
+        </p>
+      </div>
+
       {/* Stock header */}
       <div className="bg-brand-surface border border-white/15 rounded-3xl overflow-hidden">
         <div className="bg-white/5 px-5 py-3 border-b border-white/10 flex items-center justify-between">
           <div>
             <p className="text-brand-white font-black text-base">Pizza Shop Inc.</p>
-            <p className="text-brand-muted text-xs">PIZZA · NYSE</p>
+            <p className="text-brand-muted text-xs">PIZZA · NYSE · 100 shares total</p>
           </div>
           <div className="text-right">
             <p className="text-brand-white font-black text-xl">${PRICE_PER_SHARE}.00</p>
@@ -151,22 +171,25 @@ function PlaceOrderDemo() {
 
           {/* Shares input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-brand-muted text-xs font-semibold uppercase tracking-wide">
-              Number of Shares
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-brand-muted text-xs font-semibold uppercase tracking-wide">
+                Number of Shares
+              </label>
+              <span className="text-brand-muted text-xs">100 available</span>
+            </div>
             <div className="relative">
               <input
                 type="number"
                 inputMode="numeric"
                 value={qty}
                 onChange={e => setQty(e.target.value)}
-                placeholder="Enter shares (try 20)"
-                className="w-full bg-brand-black border-2 border-white/15 rounded-2xl px-5 py-4 text-brand-white text-lg font-black placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-purple transition-colors"
+                placeholder="Enter 5"
+                className={`w-full bg-brand-black border-2 rounded-2xl px-5 py-4 text-brand-white text-lg font-black placeholder:text-brand-muted/50 focus:outline-none transition-colors ${
+                  isTarget ? 'border-brand-green' : validQty ? 'border-brand-purple' : 'border-white/15 focus:border-brand-purple'
+                }`}
               />
-              {validQty && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-green text-xs font-bold">
-                  ✓
-                </span>
+              {isTarget && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-green text-sm font-black">✓</span>
               )}
             </div>
             {qty !== '' && !validQty && (
@@ -174,18 +197,25 @@ function PlaceOrderDemo() {
             )}
           </div>
 
-          {/* Est. cost */}
-          <div className="bg-white/5 rounded-2xl px-4 py-3 flex justify-between items-center">
-            <span className="text-brand-muted text-sm">Est. cost</span>
-            <span className={`font-black text-lg transition-colors ${validQty ? 'text-brand-white' : 'text-brand-muted'}`}>
-              {validQty ? `$${total.toLocaleString()}` : '$—'}
-            </span>
-          </div>
-
+          {/* Ownership math — shown live */}
           {validQty && (
-            <p className="text-brand-muted text-xs text-center animate-slideUp">
-              You'll own <span className="text-brand-white font-bold">{ownership}%</span> of Pizza Shop Inc.
-            </p>
+            <div className="bg-white/5 rounded-2xl px-4 py-3 flex flex-col gap-2 animate-slideUp">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-brand-muted">Est. cost</span>
+                <span className="text-brand-white font-bold">${total.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-brand-muted">Ownership math</span>
+                <span className="text-brand-white font-bold">{parsed} ÷ {TOTAL_SHARES} shares</span>
+              </div>
+              <div className="h-px bg-white/10" />
+              <div className="flex justify-between items-center">
+                <span className="text-brand-muted text-sm">You would own</span>
+                <span className={`font-black text-2xl ${isTarget ? 'text-brand-green' : 'text-brand-white'}`}>
+                  {ownership}%
+                </span>
+              </div>
+            </div>
           )}
         </div>
       </div>
