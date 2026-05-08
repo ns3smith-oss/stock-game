@@ -3,46 +3,204 @@
 import { useState } from 'react'
 import { haptics } from '@/lib/haptics'
 
-// ─── Company Split ────────────────────────────────────────────────
-function CompanySplitDemo() {
-  const [owned, setOwned] = useState(0)
-  const TOTAL = 20
+// ─── Place an Order ───────────────────────────────────────────────
+function PlaceOrderDemo() {
+  const PRICE_PER_SHARE = 100
+  const TOTAL_SHARES = 100
+  const TARGET = 20
 
-  function tap(i: number) {
+  const [qty, setQty] = useState('')
+  const [stage, setStage] = useState<'order' | 'review' | 'confirmed'>('order')
+
+  const parsed = parseInt(qty, 10)
+  const validQty = !isNaN(parsed) && parsed > 0 && parsed <= TOTAL_SHARES
+  const total = validQty ? parsed * PRICE_PER_SHARE : 0
+  const ownership = validQty ? ((parsed / TOTAL_SHARES) * 100).toFixed(0) : '0'
+  const isTarget = parsed === TARGET
+
+  function handleReview() {
+    if (!validQty) return
     haptics.tap()
-    setOwned(i < owned ? i : i + 1)
+    setStage('review')
   }
 
-  const pct = Math.round((owned / TOTAL) * 100)
+  function handleConfirm() {
+    haptics.correct()
+    setStage('confirmed')
+  }
+
+  function handleReset() {
+    haptics.tap()
+    setQty('')
+    setStage('order')
+  }
+
+  if (stage === 'confirmed') {
+    return (
+      <div className="flex flex-col items-center gap-4 animate-slideUp">
+        <div className="text-6xl animate-bounce">🎉</div>
+        <div className="w-full bg-brand-green/20 border-2 border-brand-green rounded-3xl p-5 text-center">
+          <p className="text-brand-green font-black text-2xl">Order Filled!</p>
+          <p className="text-brand-white font-bold text-base mt-1">{parsed} shares of PIZZA</p>
+          <div className="h-px bg-white/10 my-3" />
+          <div className="flex justify-between text-sm">
+            <span className="text-brand-muted">Shares purchased</span>
+            <span className="text-brand-white font-bold">{parsed}</span>
+          </div>
+          <div className="flex justify-between text-sm mt-1">
+            <span className="text-brand-muted">Price per share</span>
+            <span className="text-brand-white font-bold">${PRICE_PER_SHARE}.00</span>
+          </div>
+          <div className="flex justify-between text-sm mt-1">
+            <span className="text-brand-muted">Total paid</span>
+            <span className="text-brand-white font-bold">${total.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-sm mt-1">
+            <span className="text-brand-muted">Your ownership</span>
+            <span className="text-brand-green font-black">{ownership}%</span>
+          </div>
+        </div>
+        {isTarget && (
+          <div className="bg-brand-purple/20 border border-brand-purple rounded-2xl px-4 py-3 text-center">
+            <p className="text-brand-purple font-bold text-sm">
+              You bought 20 of 100 shares — you own 20% of the pizza shop. 🍕
+            </p>
+          </div>
+        )}
+        <button onClick={handleReset} className="text-brand-muted text-xs underline">Place another order</button>
+      </div>
+    )
+  }
+
+  if (stage === 'review') {
+    return (
+      <div className="flex flex-col gap-4 animate-slideUp">
+        <div className="bg-brand-surface border border-white/15 rounded-3xl overflow-hidden">
+          <div className="bg-white/5 px-5 py-3 border-b border-white/10">
+            <p className="text-brand-muted text-xs font-semibold uppercase tracking-wide">Order Review</p>
+          </div>
+          <div className="px-5 py-4 flex flex-col gap-3">
+            <div className="flex justify-between">
+              <span className="text-brand-muted text-sm">Stock</span>
+              <div className="text-right">
+                <p className="text-brand-white font-bold text-sm">Pizza Shop Inc.</p>
+                <p className="text-brand-muted text-xs">PIZZA</p>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-brand-muted text-sm">Order type</span>
+              <span className="text-brand-white font-bold text-sm">Market Order</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-brand-muted text-sm">Shares</span>
+              <span className="text-brand-white font-bold text-sm">{parsed}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-brand-muted text-sm">Est. price/share</span>
+              <span className="text-brand-white font-bold text-sm">${PRICE_PER_SHARE}.00</span>
+            </div>
+            <div className="h-px bg-white/10" />
+            <div className="flex justify-between">
+              <span className="text-brand-white font-bold text-sm">Est. total</span>
+              <span className="text-brand-green font-black text-base">${total.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleConfirm}
+          className="w-full bg-brand-green text-brand-black font-black text-lg py-4 rounded-2xl shadow-lg shadow-brand-green/30 active:scale-95 transition-transform"
+        >
+          Confirm Order →
+        </button>
+        <button onClick={() => setStage('order')} className="text-brand-muted text-sm text-center">
+          ← Edit order
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-brand-muted text-xs text-center">Tap shares to buy them 👇</p>
-      <div className="grid grid-cols-5 gap-2">
-        {Array.from({ length: TOTAL }).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => tap(i)}
-            className={`w-12 h-12 rounded-xl text-lg font-bold transition-all duration-150 active:scale-90 ${
-              i < owned
-                ? 'bg-brand-green shadow-lg shadow-brand-green/30 scale-105'
-                : 'bg-brand-surface border border-white/15'
-            }`}
-          >
-            {i < owned ? '🍕' : ''}
-          </button>
-        ))}
+    <div className="flex flex-col gap-4">
+      {/* Stock header */}
+      <div className="bg-brand-surface border border-white/15 rounded-3xl overflow-hidden">
+        <div className="bg-white/5 px-5 py-3 border-b border-white/10 flex items-center justify-between">
+          <div>
+            <p className="text-brand-white font-black text-base">Pizza Shop Inc.</p>
+            <p className="text-brand-muted text-xs">PIZZA · NYSE</p>
+          </div>
+          <div className="text-right">
+            <p className="text-brand-white font-black text-xl">${PRICE_PER_SHARE}.00</p>
+            <p className="text-brand-green text-xs font-semibold">+2.4% today</p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 flex flex-col gap-4">
+          {/* Order type */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-brand-muted text-xs font-semibold uppercase tracking-wide">Order Type</label>
+            <div className="flex gap-2">
+              <div className="flex-1 bg-brand-purple/20 border border-brand-purple rounded-xl px-4 py-2.5 text-center">
+                <p className="text-brand-purple font-bold text-sm">Market Order</p>
+              </div>
+              <div className="flex-1 bg-brand-surface border border-white/10 rounded-xl px-4 py-2.5 text-center opacity-40">
+                <p className="text-brand-muted font-bold text-sm">Limit Order</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Shares input */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-brand-muted text-xs font-semibold uppercase tracking-wide">
+              Number of Shares
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="numeric"
+                value={qty}
+                onChange={e => setQty(e.target.value)}
+                placeholder="Enter shares (try 20)"
+                className="w-full bg-brand-black border-2 border-white/15 rounded-2xl px-5 py-4 text-brand-white text-lg font-black placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-purple transition-colors"
+              />
+              {validQty && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-green text-xs font-bold">
+                  ✓
+                </span>
+              )}
+            </div>
+            {qty !== '' && !validQty && (
+              <p className="text-brand-error text-xs pl-1">Enter a number between 1 and {TOTAL_SHARES}</p>
+            )}
+          </div>
+
+          {/* Est. cost */}
+          <div className="bg-white/5 rounded-2xl px-4 py-3 flex justify-between items-center">
+            <span className="text-brand-muted text-sm">Est. cost</span>
+            <span className={`font-black text-lg transition-colors ${validQty ? 'text-brand-white' : 'text-brand-muted'}`}>
+              {validQty ? `$${total.toLocaleString()}` : '$—'}
+            </span>
+          </div>
+
+          {validQty && (
+            <p className="text-brand-muted text-xs text-center animate-slideUp">
+              You'll own <span className="text-brand-white font-bold">{ownership}%</span> of Pizza Shop Inc.
+            </p>
+          )}
+        </div>
       </div>
-      <div className={`w-full rounded-2xl px-5 py-3 text-center transition-all duration-300 ${
-        owned > 0 ? 'bg-brand-green/20 border-2 border-brand-green' : 'bg-brand-surface border border-white/10'
-      }`}>
-        <p className={`font-black text-2xl ${owned > 0 ? 'text-brand-green' : 'text-brand-muted'}`}>
-          {owned > 0 ? `You own ${pct}%` : 'Tap to buy shares'}
-        </p>
-        {owned > 0 && (
-          <p className="text-brand-muted text-xs mt-1">{owned} of {TOTAL} shares · {TOTAL - owned} left to buy</p>
-        )}
-      </div>
+
+      <button
+        onClick={handleReview}
+        disabled={!validQty}
+        className={`w-full font-black text-lg py-4 rounded-2xl transition-all active:scale-95 ${
+          validQty
+            ? 'bg-brand-green text-brand-black shadow-lg shadow-brand-green/30'
+            : 'bg-brand-surface text-brand-muted border border-white/10 opacity-50'
+        }`}
+      >
+        Review Order →
+      </button>
     </div>
   )
 }
@@ -449,7 +607,7 @@ export function DemoSlide({ demoType, heading }: DemoSlideProps) {
         </span>
         <h2 className="text-xl font-black text-brand-white leading-snug">{heading}</h2>
       </div>
-      {demoType === 'company-split' && <CompanySplitDemo />}
+      {demoType === 'company-split' && <PlaceOrderDemo />}
       {demoType === 'supply-demand' && <SupplyDemandDemo />}
       {demoType === 'savings-vs-investing' && <SavingsVsInvestingDemo />}
       {demoType === 'price-range' && <PriceRangeDemo />}
