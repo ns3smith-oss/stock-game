@@ -57,7 +57,7 @@ export default function StarterTrackPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto px-6 py-6 pb-20">
+    <div className="max-w-sm mx-auto px-6 py-6 pb-20 md:max-w-2xl">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">

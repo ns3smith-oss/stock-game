@@ -4,7 +4,7 @@
 Originally built as "StockQuest" in a single Claude Code session. Rebranded and redesigned as **Stockly** starting 2026-04-22. The vision is a Duolingo-style stock education platform built for people who were never given access to financial education — especially women, young adults, and first-gen wealth builders.
 
 ## What This App Is
-A mobile-first, beginner-friendly stock education app. Bright, interactive, and welcoming — feels like playing, not studying. Full 14-screen onboarding flow routes users into a personalized learning track. All state stored in localStorage, no backend required.
+A mobile-first, beginner-friendly stock education app. Bright, interactive, and welcoming — feels like playing, not studying. Full 14-screen onboarding flow routes users into a personalized learning track. All state stored in localStorage, no backend required. Fully responsive — desktop view has a persistent sidebar, mobile uses a hamburger drawer.
 
 ## Brand
 - **Name**: Stockly
@@ -112,19 +112,13 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 - Unit 2: Reading the Market (bull/bear + phase chart demo, company research, diversification, unit quiz)
 - Unit 3: Making Your Move (risk/reward, orders, first trade, portfolio + diversification demo, final quiz)
 
-### Leveler Track ⏳ NOT YET BUILT — placeholder page exists
-1. How to read a basic price chart
-2. Support and resistance
-3. What is volume telling you?
-4. Short term vs long term — which is right for you?
-5. Risk management: position sizing and the 1% rule
-6. Stop loss and take profit
-7. How to spot when a stock is being manipulated
-8. Reading earnings reports without being confused
-9. What market cycles look like and how to use them
-10. Building a real strategy that fits your life and goals
+### Leveler Track ✅ BUILT — 3 units, 14 lessons, 2 interactive demos + 1 anatomy demo
+- Unit 1: Reading the Charts (price chart reading + candlestick anatomy demo, support/resistance + 52-week range demo, volume, unit quiz)
+- Unit 2: Timing & Risk (short vs long term, risk management + 1% rule, stop loss + take profit, manipulation spotting, unit quiz)
+- Unit 3: The Full Picture (earnings reports, market cycles + bull/bear demo, building a strategy, pre-trade checklist, final quiz)
+- Final lesson ID: `lv3-l5` — unlocks Wealth Building track
 
-### Wealth Building Closer ⏳ NOT YET BUILT — unlocks after all tracks
+### Wealth Building Closer ⏳ NOT YET BUILT — unlocks after Leveler (`lv3-l5` complete)
 1. The difference between an asset and a liability
 2. How the wealthy use the stock market as a tool, not a gamble
 3. Saving with purpose — emergency fund, investment fund, spending money
@@ -136,7 +130,7 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 ```
 stock-game/
 ├── app/
-│   ├── layout.tsx                          # Root layout — brand-black bg, no XPBar on onboarding
+│   ├── layout.tsx                          # Root layout — DesktopSidebar + md:flex, brand-black bg
 │   ├── page.tsx                            # Home — splash animation + landing with S+tockly wordmark
 │   ├── globals.css
 │   ├── welcome/page.tsx                    # Screen 2 — terms checkbox, timestamped agreement
@@ -154,12 +148,13 @@ stock-game/
 │   │   ├── knowledge-check/page.tsx        # Screen 13 — 5-question knowledge quiz
 │   │   └── course-ready/page.tsx           # Screen 14 — personalized course reveal
 │   ├── learn/
-│   │   ├── page.tsx                        # Main dashboard — all tracks, lock/unlock, XP totals
+│   │   ├── page.tsx                        # Main dashboard — all tracks, lock/unlock, XP totals, md:grid-cols-2
 │   │   ├── starter/page.tsx                # Starter track — unit map with sequential lesson unlock
 │   │   ├── starter/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   │   ├── builder/page.tsx                # Builder track — unit map with sequential lesson unlock
 │   │   ├── builder/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
-│   │   └── leveler/page.tsx                # Leveler track (placeholder)
+│   │   ├── leveler/page.tsx                # Leveler track — unit map with sequential lesson unlock
+│   │   └── leveler/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   ├── glossary/page.tsx                   # 60+ stock terms, searchable, filterable by category
 │   ├── about/page.tsx                      # About Stockly
 │   ├── contact/page.tsx                    # Contact form
@@ -169,6 +164,8 @@ stock-game/
 │   └── challenge/page.tsx                  # Legacy — to be redesigned
 ├── components/
 │   ├── StocklyLogo.tsx                     # SVG S-mark logo — purple ribbon S + candlesticks
+│   ├── DesktopSidebar.tsx                  # Persistent left sidebar for md+ screens — logo, nav, XP, user, sign out
+│   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — mobile only, dashboard only
 │   ├── ui/
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
@@ -180,8 +177,7 @@ stock-game/
 │   ├── ModuleCard.tsx
 │   ├── LessonCard.tsx
 │   ├── LessonPlayer.tsx                    # Lesson slide renderer — all 7 slide types, haptics, confetti
-│   ├── DemoSlide.tsx                       # 7 interactive demos: order ticket, supply/demand, growth, DCA, price range, bull/bear, portfolio
-│   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — dashboard only
+│   ├── DemoSlide.tsx                       # 8 interactive demos (see table below)
 │   ├── LessonFlow.tsx
 │   ├── StockChart.tsx
 │   ├── Portfolio.tsx
@@ -196,6 +192,7 @@ stock-game/
 │   ├── celebrate.ts                        # canvas-confetti celebrations
 │   ├── starter-lessons.ts                  # Starter track — 4 units, 17 lessons, shared Slide/Lesson/Unit interfaces
 │   ├── builder-lessons.ts                  # Builder track — 3 units, 13 lessons
+│   ├── leveler-lessons.ts                  # Leveler track — 3 units, 14 lessons
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
 │   ├── constants.ts
@@ -213,16 +210,13 @@ stock-game/
 - **Terms stored with timestamp + UUID** — `stockly_terms_agreed` provides legal proof of agreement
 - **Pure functions** — `lib/gameState.ts` has zero React imports
 - **Storage key versioned** — `stockgame_v1`
+- **Responsive layout** — `app/layout.tsx` wraps all pages in `md:flex`; `DesktopSidebar` is `hidden md:flex` (fixed, 240px); main content is `md:ml-60`. Mobile-first, desktop-enhanced.
 
-## Lesson System — Starter Track (BUILT)
+## Lesson System
 
-### Data (`lib/starter-lessons.ts`)
+### Shared Types (`lib/starter-lessons.ts`)
 - TypeScript interfaces: `SlideType`, `QuizSlide`, `Slide`, `Lesson`, `Unit`
-- `STARTER_UNITS` array — 4 units, 17 lessons, fully written educational content
-- Unit 1: What is a Stock? (pizza shop analogy, real ownership, IPOs, unit quiz)
-- Unit 2: How the Market Works (NYSE/Nasdaq, buyers/sellers, price movement, unit quiz)
-- Unit 3: Getting Started (brokers, SIPC protection, how to buy, portfolios, ETFs, unit quiz)
-- Unit 4: Money & Risk (saving vs investing, inflation, fear/crashes, 1-2% rule, DCA, fractional shares, final quiz)
+- `Unit` interface fields: `id`, `title`, `subtitle`, `color`, `borderColor`, `lessons[]`
 
 ### Slide Types
 `'intro'` | `'text'` | `'fact'` | `'tap-reveal'` | `'quiz'` | `'complete'` | `'chart-demo'`
@@ -237,90 +231,110 @@ stock-game/
 - Props: `lesson`, `onComplete(xp)`, `backHref`
 
 ### Interactive Demo Slides (`components/DemoSlide.tsx`)
-7 self-contained interactive demos inserted after key explanatory slides:
+8 self-contained interactive demos:
 
-| demoType | Lesson | What the user does |
-|---|---|---|
-| `company-split` | Pizza Shop | Order ticket for Pizza Shop Inc. — enter 5 of 100 shares, see ownership math live, review + confirm order |
-| `supply-demand` | Who's Buying & Selling | Add buyers/sellers, watch price direction animate in real time |
-| `savings-vs-investing` | Saving vs Investing | Drag 30-year slider, watch investing bar dwarf savings bar |
-| `dca` | Starting Small | Tap to invest $50 each week, average cost calculates live |
-| `price-range` | Read a Stock Page | Tap Low/Mid/High, price marker slides along 52-week range |
-| `bull-bear` | Bull vs Bear Markets | Tap through all 4 market phases, mini SVG chart redraws |
-| `portfolio-bars` | Building a Portfolio | Toggle diversification, watch risk meter change color |
+| demoType | Track | Lesson | What the user does |
+|---|---|---|---|
+| `company-split` | Starter | Pizza Shop | Order ticket — enter 5 of 100 shares, see ownership math live, review + confirm |
+| `supply-demand` | Starter | Who's Buying & Selling | Add buyers/sellers, watch price direction animate |
+| `savings-vs-investing` | Starter | Saving vs Investing | Drag 30-year slider, watch investing bar dwarf savings bar |
+| `dca` | Starter | Starting Small | Tap to invest $50 each week, average cost calculates live |
+| `price-range` | Builder | Read a Stock Page | Tap Low/Mid/High, price marker slides along 52-week range |
+| `bull-bear` | Builder/Leveler | Bull vs Bear / Market Cycles | Tap through 4 market phases, SVG chart redraws |
+| `portfolio-bars` | Builder | Building a Portfolio | Toggle diversification, watch risk meter change color |
+| `candlestick-anatomy` | Leveler | How to Read a Price Chart | SVG candlestick with labeled arrows — tap HIGH/CLOSE/OPEN/LOW to highlight and explain each part |
 
-**Order ticket demo specifics** (`company-split`):
-- Purple callout: "100 total shares. Buy 5 to see what you own."
-- Input turns green + checkmark when user hits target (5)
-- Live panel shows `{x} ÷ 100 shares` math as they type
-- Review screen: "Shares buying: 5 of 100" + ownership calc
-- Confirmed screen: callout connects to the quiz that follows
-- Pizza Shop lesson reordered: explain → demo → quiz → tap-reveal → complete
+**Candlestick anatomy demo specifics** (`candlestick-anatomy`):
+- Large green candlestick SVG with upper wick, body, lower wick
+- Static gray labels on LEFT: "Wick" and "Body" with dashed leader lines
+- Interactive labels on RIGHT: HIGH, CLOSE, OPEN, LOW with left-pointing arrowheads landing at exact candle points
+- Tapping a label highlights that candle part, fades everything else, slides up an explanation card
+- Caption notes this is a green candle (price went up during the period)
 
-### Builder Track (BUILT — `lib/builder-lessons.ts`)
-- 3 units, 13 lessons covering: investment types, reading stock pages, bull/bear markets, company research, diversification, risk/reward, order types, first trade, portfolio building
-- Same sequential unlock system, XP tracking (`stockly_builder_xp`), progress (`stockly_builder_progress`)
-- Track home: `app/learn/builder/page.tsx` — hamburger removed, ✕ routes to `/learn`
-- Lesson route: `app/learn/builder/lesson/[lessonId]/page.tsx`
+### Starter Track (`lib/starter-lessons.ts`)
+- 4 units, 17 lessons
+- Final lesson ID: `u4-l5`
+- Progress key: `stockly_starter_progress` | XP key: `stockly_starter_xp`
+
+### Builder Track (`lib/builder-lessons.ts`)
+- 3 units, 13 lessons
 - Final lesson ID: `b3-l5`
+- Progress key: `stockly_builder_progress` | XP key: `stockly_builder_xp`
 
-### Starter Track Home (`app/learn/starter/page.tsx`)
-- Shows all 4 units with colored section headers
-- Lesson nodes: locked (🔒) → available → complete (✅)
-- Lessons unlock sequentially — complete one to unlock the next
-- Overall progress bar with % complete + lesson count
-- Progress stored in `stockly_starter_progress` (localStorage)
+### Leveler Track (`lib/leveler-lessons.ts`)
+- 3 units, 14 lessons covering: candlestick reading, support/resistance, volume, short vs long term, 1% rule, stop loss/take profit, manipulation, earnings reports, market cycles, strategy building
+- Final lesson ID: `lv3-l5` — completing this unlocks Wealth Building
+- Progress key: `stockly_leveler_progress` | XP key: `stockly_leveler_xp`
+- Track home: `app/learn/leveler/page.tsx`
+- Lesson route: `app/learn/leveler/lesson/[lessonId]/page.tsx`
 
-### Lesson Route (`app/learn/starter/lesson/[lessonId]/page.tsx`)
-- Dynamic route — looks up lesson by ID from `STARTER_UNITS`
-- On complete: saves to `stockly_starter_progress`, adds XP to `stockly_starter_xp`
-- Milestone celebration at 100 XP (haptics.levelUp + celebrateLevelUp)
-- Routes back to `/learn/starter` on completion
+### Track Page Pattern (all 3 tracks use identical structure)
+- Header: StocklyLogo + wordmark (left), ✕ button routes to `/learn` (right)
+- Track hero card: emoji, title, description, overall progress bar
+- Unit sections with colored header cards (`color` + `borderColor` from Unit data)
+- Lesson nodes: locked (🔒) / available (purple border, →) / complete (✅, green border, ★)
+- Lessons unlock sequentially — previous must be complete
+- Completion banner fires when all lessons done
+- Content area: `max-w-sm mx-auto md:max-w-2xl`
 
 ### localStorage Keys (lesson progress)
 | Key | Value |
 |---|---|
-| `stockly_starter_progress` | `{ [lessonId]: true }` — which lessons are complete |
-| `stockly_starter_xp` | Total XP earned in starter track (number string) |
+| `stockly_starter_progress` | `{ [lessonId]: true }` |
+| `stockly_starter_xp` | Total XP earned (number string) |
+| `stockly_builder_progress` | `{ [lessonId]: true }` |
+| `stockly_builder_xp` | Total XP earned (number string) |
+| `stockly_leveler_progress` | `{ [lessonId]: true }` |
+| `stockly_leveler_xp` | Total XP earned (number string) |
 
-## Navigation System (BUILT)
+## Navigation System
 
 ### `/learn` Dashboard (`app/learn/page.tsx`)
-- Main menu showing all 4 tracks as cards: Starter, Builder, Leveler, Wealth Building
+- Main menu showing all 4 tracks as cards
 - Lock/unlock logic:
   - Starter: always available
   - Builder: unlocks if `stockly_level` is `builder`/`leveler` OR starter final lesson (`u4-l5`) is complete
   - Leveler: unlocks if `stockly_level` is `leveler` OR builder final lesson (`b3-l5`) is complete
   - Wealth: unlocks after leveler final lesson (`lv3-l5`) is complete
 - Per-track progress bars + XP display, total XP in header
-- "Coming Soon" badge for tracks not yet built
+- Mobile header (hamburger + logo + XP) hidden on desktop via `md:hidden`
+- Track grid: `flex flex-col md:grid md:grid-cols-2` — 2 columns on desktop
+- "Coming Soon" badge for Wealth Building (not yet built)
+
+### Desktop Sidebar (`components/DesktopSidebar.tsx`)
+- `hidden md:flex` — only visible on desktop (md: and above)
+- Fixed position, 240px wide (`w-60`), full height, `bg-brand-surface` with right border
+- Contains: Stockly logo/wordmark (links to `/learn`), nav items, Upgrade to Pro link, total XP, user avatar + name + plan, Sign Out
+- Nav items: My Tracks, Glossary, Settings, About, Contact
+- Active route highlighted with purple background
+- XP and user data refresh on every route change (reads localStorage on `pathname` change)
 
 ### `HamburgerMenu` Component (`components/HamburgerMenu.tsx`)
+- Mobile-only, dashboard-only (not shown on track or lesson pages)
 - Slide-in drawer from left, backdrop tap to close
-- Shows user name + Free/Pro plan badge
-- Links: My Tracks → `/learn`, Upgrade to Pro → `/onboarding/plan`, Glossary → `/glossary`, Settings → `/settings`, About → `/about`, Contact → `/contact`
-- Sign Out at the bottom (calls `signOut()`, routes to `/`)
+- Same nav links as DesktopSidebar
+- Sign Out at the bottom
+
+### Track Pages (Starter, Builder, Leveler)
+- No hamburger menu — focused learning experience
+- Header: StocklyLogo + ✕ button that routes to `/learn`
 
 ### Supporting Pages
-- `/glossary` — 60+ terms across 6 categories (Basics, Market, Trading, Analysis, Risk, Advanced). Searchable + filterable by category. Accordion expand.
+- `/glossary` — 60+ terms across 6 categories (Basics, Market, Trading, Analysis, Risk, Advanced). Searchable + filterable. Accordion expand. Includes "Ceiling" (resistance synonym).
 - `/about` — Mission and what Stockly does
-- `/contact` — Contact form + direct email
-- `/settings` — Name edit, plan display, reset progress, sign out
+- `/contact` — Contact form + direct email (`hello@stockly.app`)
+- `/settings` — Name edit, plan display, reset progress (clears all `stockly_*_progress` + `stockly_*_xp` keys), sign out
 
-### `getResumeRoute()` updated
-- Enrolled users now always land on `/learn` dashboard instead of a specific track
-
-### Track ✕ buttons
-- Both Starter and Builder track home pages now route ✕ → `/learn`
+### `getResumeRoute()` (in `lib/auth.ts`)
+- Enrolled users always land on `/learn` dashboard
 
 ## What To Do Next
-1. Build Leveler track lesson content + routes (same pattern as Starter/Builder)
-2. Build Wealth Building closer track (unlocks after Leveler)
-3. Wire `enrollmentComplete` flag after all lessons in a track are done
-4. Redesign legacy simulator + challenge pages with Money Moves color system
+1. **Build Wealth Building track** — 6 lessons, unlocks after `lv3-l5`
+2. **Deploy to Vercel** — app is feature-complete enough to ship
+3. Wire `enrollmentComplete` flag when a track is finished
+4. Redesign legacy `/simulator` + `/challenge` pages with Money Moves color system
 5. Commission final bull mascot illustration
-6. Deploy to Vercel
 
 ---
-*Last updated: 2026-05-08 — Interactive demo slides added (7 demos, DemoSlide.tsx), order ticket tied to 5-of-100 quiz, Pizza Shop lesson reordered, Glossary updated with Ceiling, HamburgerMenu on dashboard only*
+*Last updated: 2026-05-11 — Leveler track built (3 units, 14 lessons), candlestick anatomy demo added, desktop responsive UI with DesktopSidebar, learn dashboard updated with 2-column grid and hidden mobile header on desktop*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*

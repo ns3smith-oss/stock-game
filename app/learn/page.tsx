@@ -7,6 +7,7 @@ import { HamburgerMenu } from '@/components/HamburgerMenu'
 import { StocklyLogo } from '@/components/StocklyLogo'
 import { STARTER_UNITS } from '@/lib/starter-lessons'
 import { BUILDER_UNITS } from '@/lib/builder-lessons'
+import { LEVELER_UNITS } from '@/lib/leveler-lessons'
 
 interface TrackInfo {
   id: string
@@ -54,8 +55,8 @@ const TRACKS: TrackInfo[] = [
     href: '/learn/leveler',
     xpKey: 'stockly_leveler_xp',
     progressKey: 'stockly_leveler_progress',
-    totalLessons: 0,
-    finalLessonId: '',
+    totalLessons: LEVELER_UNITS.reduce((a, u) => a + u.lessons.length, 0),
+    finalLessonId: 'lv3-l5',
     requiredLevel: ['leveler'],
   },
   {
@@ -158,10 +159,10 @@ export default function LearnDashboard() {
   const totalXP = Object.values(xpMap).reduce((a, b) => a + b, 0)
 
   return (
-    <div className="max-w-sm mx-auto px-6 py-6 pb-20 min-h-screen">
+    <div className="max-w-sm mx-auto px-6 py-6 pb-20 min-h-screen md:max-w-4xl">
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Mobile header — hidden on desktop (sidebar handles nav + XP) */}
+      <div className="flex items-center justify-between mb-6 md:hidden">
         <HamburgerMenu userName={userName} userPlan={userPlan} />
         <div className="flex items-center -space-x-1">
           <StocklyLogo size={28} />
@@ -173,15 +174,15 @@ export default function LearnDashboard() {
       </div>
 
       {/* Welcome */}
-      <div className="mb-6 animate-slideUp">
-        <h1 className="text-2xl font-black text-brand-white">
+      <div className="mb-6 animate-slideUp md:mb-8">
+        <h1 className="text-2xl font-black text-brand-white md:text-3xl">
           {userName ? `Welcome back, ${userName}.` : 'Your Learning Path'}
         </h1>
         <p className="text-brand-muted text-sm mt-1">Pick up where you left off.</p>
       </div>
 
       {/* Tracks */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 md:grid md:grid-cols-2">
         {TRACKS.map((track) => {
           const unlocked = isTrackUnlocked(track)
           const complete = isTrackComplete(track)

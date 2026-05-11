@@ -571,6 +571,178 @@ function DCADemo() {
   )
 }
 
+// ─── Candlestick Anatomy ──────────────────────────────────────────
+function CandlestickAnatomyDemo() {
+  const [active, setActive] = useState<string | null>(null)
+
+  // Candle geometry
+  const CX  = 108  // wick center x
+  const BL  = 80   // body left
+  const BR  = 136  // body right
+  const WT  = 22   // wick top (high)
+  const CT  = 72   // close  (body top  — green candle closes higher)
+  const OP  = 208  // open   (body bottom)
+  const WB  = 265  // wick bottom (low)
+  const LX  = 168  // right-side label text x-start
+
+  const PARTS = [
+    {
+      id: 'high',
+      label: 'HIGH',
+      y: WT,
+      tipX: CX,   // arrowhead lands on the wick center
+      desc: 'The highest price reached during the period — the very tip of the upper wick.',
+    },
+    {
+      id: 'close',
+      label: 'CLOSE',
+      y: CT,
+      tipX: BR,   // arrowhead lands on body right edge
+      desc: 'Where the price ended. On a green candle, Close is at the TOP of the body because the price finished higher than it started.',
+    },
+    {
+      id: 'open',
+      label: 'OPEN',
+      y: OP,
+      tipX: BR,
+      desc: 'Where the price started. On a green candle, Open is at the BOTTOM of the body because the price went up from here.',
+    },
+    {
+      id: 'low',
+      label: 'LOW',
+      y: WB,
+      tipX: CX,
+      desc: 'The lowest price reached during the period — the very bottom of the lower wick.',
+    },
+  ]
+
+  function toggle(id: string) {
+    haptics.tap()
+    setActive(prev => prev === id ? null : id)
+  }
+
+  const isAny = active !== null
+
+  function alphaFor(part: 'wick-up' | 'body' | 'wick-dn') {
+    if (!isAny) return 1
+    if (part === 'wick-up' && active === 'high') return 1
+    if (part === 'wick-dn' && active === 'low') return 1
+    if (part === 'body' && (active === 'close' || active === 'open')) return 1
+    return 0.1
+  }
+
+  const activePart = PARTS.find(p => p.id === active)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <svg viewBox="0 0 290 285" style={{ width: '100%', maxHeight: 255 }}>
+
+        {/* ── Candle ── */}
+
+        {/* Upper wick */}
+        <line x1={CX} y1={WT} x2={CX} y2={CT}
+          stroke="#39FF14" strokeWidth="3" strokeLinecap="round"
+          opacity={alphaFor('wick-up')} />
+
+        {/* Body */}
+        <rect x={BL} y={CT} width={BR - BL} height={OP - CT}
+          fill={`rgba(57,255,20,${alphaFor('body') * 0.2})`}
+          stroke={`rgba(57,255,20,${alphaFor('body')})`}
+          strokeWidth="2.5" rx="4" />
+
+        {/* Lower wick */}
+        <line x1={CX} y1={OP} x2={CX} y2={WB}
+          stroke="#39FF14" strokeWidth="3" strokeLinecap="round"
+          opacity={alphaFor('wick-dn')} />
+
+        {/* ── Left-side structural labels (static) ── */}
+
+        {/* "Wick" — points to upper wick midpoint */}
+        <text x={BL - 8} y={(WT + CT) / 2 + 4}
+          textAnchor="end" fill="#505050" fontSize="11"
+          fontFamily="system-ui,-apple-system,sans-serif">Wick</text>
+        <line x1={BL - 6} y1={(WT + CT) / 2}
+              x2={CX - 2} y2={(WT + CT) / 2}
+          stroke="#383838" strokeWidth="1" strokeDasharray="3,2" />
+
+        {/* "Body" — points to body left edge midpoint */}
+        <text x={BL - 8} y={(CT + OP) / 2 + 4}
+          textAnchor="end" fill="#505050" fontSize="11"
+          fontFamily="system-ui,-apple-system,sans-serif">Body</text>
+        <line x1={BL - 6} y1={(CT + OP) / 2}
+              x2={BL} y2={(CT + OP) / 2}
+          stroke="#383838" strokeWidth="1" strokeDasharray="3,2" />
+
+        {/* ── Right-side interactive labels ── */}
+        {PARTS.map(part => {
+          const on = active === part.id
+          const dimmed = isAny && !on
+          const arrowColor = on ? '#8B00FF' : dimmed ? '#252525' : '#4A4A4A'
+          const lineColor  = on ? '#8B00FF' : dimmed ? '#1E1E1E' : '#404040'
+          const textColor  = on ? '#FFFFFF' : dimmed ? '#252525' : '#A0A0A0'
+          const lineFromX  = part.tipX + 11  // start leader line just after arrow base
+
+          return (
+            <g key={part.id} onClick={() => toggle(part.id)} style={{ cursor: 'pointer' }}>
+
+              {/* Highlight dot when active */}
+              {on && <circle cx={part.tipX} cy={part.y} r="5" fill="#8B00FF" />}
+
+              {/* Left-pointing arrowhead: tip at (tipX, y), wings spread right */}
+              <polygon
+                points={`${part.tipX},${part.y} ${part.tipX + 11},${part.y - 5} ${part.tipX + 11},${part.y + 5}`}
+                fill={arrowColor} />
+
+              {/* Leader line */}
+              <line
+                x1={lineFromX} y1={part.y}
+                x2={LX - 6}    y2={part.y}
+                stroke={lineColor} strokeWidth="1.2"
+                strokeDasharray={on ? '' : '5,3'} />
+
+              {/* Active pill background */}
+              {on && <rect x={LX - 3} y={part.y - 13} width={80} height={26}
+                rx="7" fill="#8B00FF" opacity={0.2} />}
+
+              {/* Label text */}
+              <text x={LX} y={part.y + 5}
+                fill={textColor}
+                fontSize={on ? 13 : 12}
+                fontWeight={on ? '800' : '500'}
+                fontFamily="system-ui,-apple-system,sans-serif">
+                {part.label}
+              </text>
+
+              {/* Invisible tap target */}
+              <rect x={LX - 3} y={part.y - 14} width={115} height={28} fill="transparent" />
+            </g>
+          )
+        })}
+
+        {/* Hint text */}
+        {!isAny && (
+          <text x={190} y={279} textAnchor="middle" fill="#404040" fontSize="11"
+            fontFamily="system-ui,-apple-system,sans-serif">
+            Tap a label to learn more
+          </text>
+        )}
+      </svg>
+
+      {/* Description panel */}
+      {activePart ? (
+        <div className="bg-brand-purple/20 border border-brand-purple/50 rounded-2xl px-4 py-3 animate-slideUp">
+          <p className="text-brand-purple font-black text-xs uppercase tracking-widest mb-1">{activePart.label}</p>
+          <p className="text-brand-white text-sm leading-relaxed">{activePart.desc}</p>
+        </div>
+      ) : (
+        <p className="text-brand-muted text-xs text-center">
+          This is a <span className="text-brand-green font-bold">green candle</span> — price went up during this period
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ─── Portfolio Diversification ────────────────────────────────────
 function PortfolioDemo() {
   const SECTORS = [
@@ -644,6 +816,7 @@ export function DemoSlide({ demoType, heading }: DemoSlideProps) {
       {demoType === 'bull-bear' && <BullBearDemo />}
       {demoType === 'dca' && <DCADemo />}
       {demoType === 'portfolio-bars' && <PortfolioDemo />}
+      {demoType === 'candlestick-anatomy' && <CandlestickAnatomyDemo />}
     </div>
   )
 }
