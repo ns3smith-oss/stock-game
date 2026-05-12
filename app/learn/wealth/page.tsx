@@ -1,0 +1,160 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { haptics } from '@/lib/haptics'
+import { getCurrentUser } from '@/lib/auth'
+import { WEALTH_UNITS } from '@/lib/wealth-lessons'
+import { StocklyLogo } from '@/components/StocklyLogo'
+
+const PROGRESS_KEY = 'stockly_wealth_progress'
+
+function loadProgress(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+export default function WealthTrackPage() {
+  const router = useRouter()
+  const [progress, setProgress] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    const user = getCurrentUser()
+    if (!user) { router.push('/auth'); return }
+    setProgress(loadProgress())
+  }, [router])
+
+  const totalLessons = WEALTH_UNITS.reduce((acc, u) => acc + u.lessons.length, 0)
+  const completedCount = Object.values(progress).filter(Boolean).length
+  const overallPct = Math.round((completedCount / totalLessons) * 100)
+
+  function getLessonState(lessonId: string, unitIndex: number, lessonIndex: number) {
+    if (progress[lessonId]) return 'complete'
+    if (unitIndex === 0 && lessonIndex === 0) return 'available'
+    const units = WEALTH_UNITS
+    let prevId: string | null = null
+    if (lessonIndex > 0) {
+      prevId = units[unitIndex].lessons[lessonIndex - 1].id
+    } else if (unitIndex > 0) {
+      const prevUnit = units[unitIndex - 1]
+      prevId = prevUnit.lessons[prevUnit.lessons.length - 1].id
+    }
+    return prevId && progress[prevId] ? 'available' : 'locked'
+  }
+
+  function handleLesson(lessonId: string, state: string) {
+    if (state === 'locked') { haptics.wrong(); return }
+    haptics.tap()
+    router.push(`/learn/wealth/lesson/${lessonId}`)
+  }
+
+  return (
+    <div className="max-w-sm mx-auto px-6 py-6 pb-20 md:max-w-2xl">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center -space-x-1">
+          <StocklyLogo size={28} />
+          <span className="text-xl font-black text-brand-white tracking-tight leading-none">tockly</span>
+        </div>
+        <button onClick={() => router.push('/learn')} className="text-brand-muted text-sm active:scale-95">
+          ✕
+        </button>
+      </div>
+
+      {/* Track hero */}
+      <div className="bg-yellow-500/10 border-2 border-yellow-500 rounded-3xl p-5 mb-6 animate-slideUp">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="text-4xl">💎</div>
+          <div>
+            <h1 className="text-xl font-black text-brand-white">Wealth Building</h1>
+            <p className="text-brand-muted text-xs">Assets, compound interest, and building generational wealth.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 bg-white/10 rounded-full h-2">
+            <div
+              className="bg-yellow-400 h-2 rounded-full transition-all duration-700"
+              style={{ width: `${overallPct}%` }}
+            />
+          </div>
+          <span className="text-yellow-400 font-bold text-xs">{overallPct}%</span>
+        </div>
+        <p className="text-brand-muted text-xs mt-1">{completedCount}/{totalLessons} lessons complete</p>
+      </div>
+
+      {/* Units */}
+      {WEALTH_UNITS.map((unit, ui) => {
+        const unitCompleted = unit.lessons.every((l) => progress[l.id])
+        return (
+          <div key={unit.id} className="mb-8 animate-slideIn">
+            <div className={`rounded-2xl border-2 ${unit.borderColor} ${unit.color} px-5 py-4 mb-4`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-brand-muted text-xs font-semibold uppercase tracking-wide">Unit {ui + 1}</p>
+                  <h2 className="text-brand-white font-black text-base">{unit.title}</h2>
+                  <p className="text-brand-muted text-xs mt-0.5">{unit.subtitle}</p>
+                </div>
+                {unitCompleted && <span className="text-2xl">✅</span>}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 pl-2">
+              {unit.lessons.map((lesson, li) => {
+                const state = getLessonState(lesson.id, ui, li)
+                const isComplete = state === 'complete'
+                const isLocked = state === 'locked'
+
+                return (
+                  <button
+                    key={lesson.id}
+                    onClick={() => handleLesson(lesson.id, state)}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all active:scale-95 ${
+                      isComplete
+                        ? 'bg-brand-green/10 border-brand-green'
+                        : isLocked
+                        ? 'bg-brand-surface/50 border-white/5 opacity-50'
+                        : 'bg-brand-surface border-yellow-500/60 shadow-lg shadow-yellow-500/10'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                      isComplete ? 'bg-brand-green/20' : isLocked ? 'bg-white/5' : 'bg-yellow-500/10'
+                    }`}>
+                      {isComplete ? '✅' : isLocked ? '🔒' : lesson.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-bold text-sm ${isLocked ? 'text-brand-muted' : 'text-brand-white'}`}>
+                        {lesson.title}
+                      </p>
+                      <p className="text-brand-muted text-xs mt-0.5">
+                        {isComplete ? 'Complete' : isLocked ? 'Locked' : `${lesson.slides.length} slides · ${lesson.xpReward} XP`}
+                      </p>
+                    </div>
+                    {!isLocked && (
+                      <span className={`text-sm font-bold flex-shrink-0 ${isComplete ? 'text-brand-green' : 'text-yellow-400'}`}>
+                        {isComplete ? '★' : '→'}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+
+      {completedCount === totalLessons && totalLessons > 0 && (
+        <div className="bg-yellow-500/10 border-2 border-yellow-500 rounded-3xl p-6 text-center animate-levelBurst">
+          <div className="text-5xl mb-3">💎</div>
+          <h2 className="text-brand-white font-black text-xl mb-2">Stockly Complete!</h2>
+          <p className="text-brand-muted text-sm">You've finished the full curriculum. The market is no longer a mystery. Now go build something.</p>
+        </div>
+      )}
+
+    </div>
+  )
+}

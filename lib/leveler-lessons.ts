@@ -361,7 +361,7 @@ export const LEVELER_UNITS: Unit[] = [
             type: 'fact',
             emoji: '🧮',
             heading: 'Position Sizing in Practice',
-            body: "If a stock is at $50 and you'd exit at $48 (a $2 loss per share), and your max risk is $20, you buy 10 shares ($20 ÷ $2 = 10). The math decides the quantity — not gut feeling.",
+            body: "You have a $2,000 account. 1% = $20 max risk. A stock is at $50 and you'd exit at $48 — that's a $2 loss per share. So: $20 ÷ $2 = 10 shares. Your account size sets the max loss, the stop loss sets the loss per share, and the math gives you the quantity.",
           },
           {
             type: 'text',
@@ -375,6 +375,12 @@ export const LEVELER_UNITS: Unit[] = [
             heading: 'The Math That Keeps You Safe',
             body: 'Tap to walk through a real position sizing example.',
             tapReveal: "Account: $5,000. Max risk per trade: 1% = $50. You want to buy a stock at $100 with a stop loss at $95 (risk = $5/share). Position size: $50 ÷ $5 = 10 shares. You're in the trade — with your risk defined before you buy.",
+          },
+          {
+            type: 'chart-demo',
+            demoType: 'position-sizing',
+            emoji: '🧮',
+            heading: 'Try It With Your Numbers',
           },
           {
             type: 'quiz',

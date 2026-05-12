@@ -743,6 +743,253 @@ function CandlestickAnatomyDemo() {
   )
 }
 
+// ─── Position Sizing Calculator ──────────────────────────────────
+const ACCOUNT_PRESETS = [500, 1000, 2000, 5000, 10000]
+
+function PositionSizingDemo() {
+  const [step, setStep] = useState(1)
+  const [account, setAccount] = useState(2000)
+  const [stockPrice, setStockPrice] = useState('50')
+  const [stopLoss, setStopLoss] = useState('48')
+
+  const stock = parseFloat(stockPrice)
+  const stop  = parseFloat(stopLoss)
+
+  const maxRisk      = account * 0.01
+  const riskPerShare = (!isNaN(stock) && !isNaN(stop)) ? stock - stop : 0
+  const validStop    = !isNaN(stock) && !isNaN(stop) && stop > 0 && stop < stock
+  const shares       = validStop && riskPerShare > 0 ? Math.floor(maxRisk / riskPerShare) : 0
+  const totalCost    = shares * stock
+  const actualLoss   = shares * riskPerShare
+
+  function goNext() { haptics.tap(); setStep(s => s + 1) }
+  function goBack() { haptics.tap(); setStep(s => s - 1) }
+  function reset()  { haptics.tap(); setStep(1); setAccount(2000); setStockPrice('50'); setStopLoss('48') }
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* Step indicators */}
+      <div className="flex items-center gap-2">
+        {[1, 2, 3].map(n => (
+          <div key={n} className="flex items-center gap-2 flex-1">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 transition-all ${
+              step === n ? 'bg-brand-purple text-brand-white' :
+              step > n   ? 'bg-brand-green text-brand-black' :
+                           'bg-brand-surface border border-white/15 text-brand-muted'
+            }`}>
+              {step > n ? '✓' : n}
+            </div>
+            {n < 3 && <div className={`flex-1 h-0.5 rounded-full transition-all ${step > n ? 'bg-brand-green' : 'bg-white/10'}`} />}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Step 1: Set your limit ── */}
+      {step === 1 && (
+        <div className="flex flex-col gap-4 animate-slideIn">
+          <div className="bg-brand-purple/10 border border-brand-purple/30 rounded-2xl px-4 py-3">
+            <p className="text-brand-purple font-black text-xs uppercase tracking-widest mb-1">Step 1 of 3</p>
+            <p className="text-brand-white font-bold text-sm">Set your loss limit</p>
+            <p className="text-brand-muted text-xs mt-1 leading-relaxed">
+              Before you buy anything, decide the most you're willing to lose on this one trade. The 1% rule makes this automatic — it's always 1% of your account.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-brand-muted text-xs font-semibold uppercase tracking-wide mb-2">My account size is</p>
+            <div className="flex gap-1.5">
+              {ACCOUNT_PRESETS.map(amt => (
+                <button
+                  key={amt}
+                  onClick={() => { haptics.tap(); setAccount(amt) }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                    account === amt
+                      ? 'bg-brand-purple text-brand-white'
+                      : 'bg-brand-surface border border-white/10 text-brand-muted'
+                  }`}
+                >
+                  {amt >= 1000 ? `$${amt / 1000}K` : `$${amt}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-brand-surface border border-white/10 rounded-2xl px-4 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-brand-muted text-xs">1% of ${account.toLocaleString()}</p>
+                <p className="text-brand-white text-sm mt-0.5">This is the <span className="text-brand-purple font-bold">maximum I can lose</span> on one trade</p>
+              </div>
+              <span className="text-brand-purple font-black text-3xl">${maxRisk.toFixed(0)}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={goNext}
+            className="w-full bg-brand-purple text-brand-white font-black py-4 rounded-2xl active:scale-95 transition-all"
+          >
+            That's my limit →
+          </button>
+        </div>
+      )}
+
+      {/* ── Step 2: Find your exit ── */}
+      {step === 2 && (
+        <div className="flex flex-col gap-4 animate-slideIn">
+          <div className="bg-brand-purple/10 border border-brand-purple/30 rounded-2xl px-4 py-3">
+            <p className="text-brand-purple font-black text-xs uppercase tracking-widest mb-1">Step 2 of 3</p>
+            <p className="text-brand-white font-bold text-sm">Pick your "I was wrong" price</p>
+            <p className="text-brand-muted text-xs mt-1 leading-relaxed">
+              Before you buy, decide the price where you'd sell if the trade goes against you. This is your stop loss — the point where you say "my reason for buying this is gone."
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <p className="text-brand-muted text-xs font-semibold uppercase tracking-wide mb-1.5">I'm buying at</p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted font-bold">$</span>
+                <input
+                  type="number" inputMode="decimal"
+                  value={stockPrice}
+                  onChange={e => setStockPrice(e.target.value)}
+                  className="w-full bg-brand-black border-2 border-white/15 focus:border-brand-purple rounded-xl pl-7 pr-3 py-3 text-brand-white font-bold text-base focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-brand-muted text-xs font-semibold uppercase tracking-wide mb-1.5">I'll exit if it hits</p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted font-bold">$</span>
+                <input
+                  type="number" inputMode="decimal"
+                  value={stopLoss}
+                  onChange={e => setStopLoss(e.target.value)}
+                  className={`w-full bg-brand-black border-2 rounded-xl pl-7 pr-3 py-3 text-brand-white font-bold text-base focus:outline-none transition-colors ${
+                    stopLoss !== '' && !validStop ? 'border-brand-error' : 'border-white/15 focus:border-brand-purple'
+                  }`}
+                />
+              </div>
+              {stopLoss !== '' && stock > 0 && stop >= stock && (
+                <p className="text-brand-error text-xs mt-1">Must be below buy price</p>
+              )}
+            </div>
+          </div>
+
+          {validStop && (
+            <div className="bg-brand-surface border border-white/10 rounded-2xl px-4 py-3 animate-slideUp">
+              <p className="text-brand-muted text-xs mb-2">If this trade goes wrong and hits your exit:</p>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-white text-sm">${stock.toFixed(2)} − ${stop.toFixed(2)} per share</span>
+                <span className="text-brand-error font-black text-xl">−${riskPerShare.toFixed(2)}<span className="text-sm font-semibold"> / share</span></span>
+              </div>
+              <p className="text-brand-muted text-xs mt-2">
+                Every share you own will cost you <span className="text-brand-white font-bold">${riskPerShare.toFixed(2)}</span> if you're wrong. That's what the next step uses.
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button onClick={goBack} className="px-5 py-4 rounded-2xl border border-white/10 text-brand-muted font-bold active:scale-95 transition-all">←</button>
+            <button
+              onClick={goNext}
+              disabled={!validStop}
+              className={`flex-1 font-black py-4 rounded-2xl active:scale-95 transition-all ${validStop ? 'bg-brand-purple text-brand-white' : 'bg-brand-surface text-brand-muted border border-white/10 opacity-50'}`}
+            >
+              That's my exit →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 3: The math gives you the answer ── */}
+      {step === 3 && (
+        <div className="flex flex-col gap-4 animate-slideIn">
+          <div className="bg-brand-purple/10 border border-brand-purple/30 rounded-2xl px-4 py-3">
+            <p className="text-brand-purple font-black text-xs uppercase tracking-widest mb-1">Step 3 of 3</p>
+            <p className="text-brand-white font-bold text-sm">The math tells you how many shares</p>
+            <p className="text-brand-muted text-xs mt-1 leading-relaxed">
+              You're not guessing a quantity. You're asking: "How many ${riskPerShare.toFixed(2)} losses can I take before I hit my ${maxRisk.toFixed(0)} limit?"
+            </p>
+          </div>
+
+          <div className="bg-brand-surface border border-white/10 rounded-2xl overflow-hidden">
+            {/* Step A */}
+            <div className="px-4 py-3 border-b border-white/10">
+              <p className="text-brand-muted text-xs mb-1">Your loss limit (from Step 1)</p>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-white text-sm">${account.toLocaleString()} × 1%</span>
+                <span className="text-brand-purple font-black text-xl">${maxRisk.toFixed(0)}</span>
+              </div>
+            </div>
+
+            {/* Step B */}
+            <div className="px-4 py-3 border-b border-white/10">
+              <p className="text-brand-muted text-xs mb-1">Your loss per share (from Step 2)</p>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-white text-sm">${stock.toFixed(2)} − ${stop.toFixed(2)}</span>
+                <span className="text-brand-error font-black text-xl">−${riskPerShare.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* The division */}
+            <div className="px-4 py-4 bg-white/5">
+              <p className="text-brand-muted text-xs mb-2 text-center">How many ${riskPerShare.toFixed(2)} losses fit inside ${maxRisk.toFixed(0)}?</p>
+              <div className="flex items-center justify-center gap-3">
+                <div className="text-center">
+                  <p className="text-brand-purple font-black text-2xl">${maxRisk.toFixed(0)}</p>
+                  <p className="text-brand-muted text-xs">max loss</p>
+                </div>
+                <span className="text-brand-muted text-2xl font-light">÷</span>
+                <div className="text-center">
+                  <p className="text-brand-error font-black text-2xl">${riskPerShare.toFixed(2)}</p>
+                  <p className="text-brand-muted text-xs">per share</p>
+                </div>
+                <span className="text-brand-muted text-2xl font-light">=</span>
+                <div className="text-center">
+                  <p className="text-brand-green font-black text-3xl">{shares}</p>
+                  <p className="text-brand-muted text-xs">shares</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Proof */}
+            <div className="px-4 py-3 bg-brand-green/10 border-t border-brand-green/20">
+              <p className="text-brand-muted text-xs mb-1 text-center">Proof it works</p>
+              <p className="text-brand-green text-sm font-bold text-center">
+                {shares} shares × ${riskPerShare.toFixed(2)} loss = <span className="font-black">${actualLoss.toFixed(0)} total loss</span>
+              </p>
+              <p className="text-brand-muted text-xs text-center mt-0.5">
+                ${actualLoss.toFixed(0)} ÷ ${account.toLocaleString()} = <span className="text-brand-green font-bold">{((actualLoss / account) * 100).toFixed(1)}%</span> of your account 🛡️
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-brand-surface border border-white/10 rounded-2xl px-4 py-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-brand-muted">Shares to buy</span>
+              <span className="text-brand-white font-bold">{shares}</span>
+            </div>
+            <div className="flex justify-between text-sm mt-1.5">
+              <span className="text-brand-muted">Total invested</span>
+              <span className="text-brand-white font-bold">${totalCost.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm mt-1.5">
+              <span className="text-brand-muted">Worst case loss</span>
+              <span className="text-brand-error font-bold">−${actualLoss.toFixed(0)}</span>
+            </div>
+          </div>
+
+          <button onClick={reset} className="w-full text-brand-muted text-sm py-3 rounded-2xl border border-white/10 active:scale-95 transition-all">
+            Try different numbers ↺
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Portfolio Diversification ────────────────────────────────────
 function PortfolioDemo() {
   const SECTORS = [
@@ -794,6 +1041,243 @@ function PortfolioDemo() {
   )
 }
 
+// ─── Options Chain ────────────────────────────────────────────────
+const STOCK_PRICE = 142
+
+const CHAIN_ROWS = [
+  { strike: 135, callBid: 8.40, callAsk: 8.70, callVol: 1240, callOI: 4580, putBid: 1.20, putAsk: 1.40, putVol: 320, putOI: 1120 },
+  { strike: 140, callBid: 4.90, callAsk: 5.20, callVol: 3810, callOI: 9200, putBid: 2.80, putAsk: 3.05, putVol: 1640, putOI: 5300 },
+  { strike: 142, callBid: 3.30, callAsk: 3.55, callVol: 5920, callOI: 14200, putBid: 3.25, putAsk: 3.50, putVol: 2100, putOI: 7800 },
+  { strike: 145, callBid: 1.85, callAsk: 2.10, callVol: 4320, callOI: 11400, putBid: 4.70, putAsk: 4.95, putVol: 880, putOI: 3200 },
+  { strike: 150, callBid: 0.55, callAsk: 0.75, callVol: 720, callOI: 2100, putBid: 8.30, putAsk: 8.60, putVol: 210, putOI: 890 },
+]
+
+function OptionsChainDemo() {
+  const [selected, setSelected] = useState<{ strike: number; side: 'call' | 'put' } | null>(null)
+
+  function tap(strike: number, side: 'call' | 'put') {
+    haptics.tap()
+    setSelected(prev => prev?.strike === strike && prev?.side === side ? null : { strike, side })
+  }
+
+  const sel = selected
+    ? CHAIN_ROWS.find(r => r.strike === selected.strike)
+    : null
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* Price reference */}
+      <div className="flex items-center justify-center gap-2">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-brand-muted text-xs font-semibold">Stock price: <span className="text-brand-white font-black">${STOCK_PRICE}</span></span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+
+      {/* Chain header */}
+      <div className="grid grid-cols-7 text-center">
+        <span className="col-span-3 text-blue-400 text-xs font-black uppercase tracking-wide">Calls</span>
+        <span className="text-brand-muted text-xs font-bold uppercase">Strike</span>
+        <span className="col-span-3 text-brand-error text-xs font-black uppercase tracking-wide">Puts</span>
+      </div>
+      <div className="grid grid-cols-7 text-center text-brand-muted text-xs mb-1">
+        <span>Bid</span><span>Ask</span><span>Vol</span>
+        <span></span>
+        <span>Bid</span><span>Ask</span><span>Vol</span>
+      </div>
+
+      {/* Rows */}
+      {CHAIN_ROWS.map(row => {
+        const isATM = row.strike === STOCK_PRICE
+        const callSel = selected?.strike === row.strike && selected?.side === 'call'
+        const putSel = selected?.strike === row.strike && selected?.side === 'put'
+
+        return (
+          <div
+            key={row.strike}
+            className={`grid grid-cols-7 text-center items-center rounded-xl py-2 transition-all ${isATM ? 'bg-white/5 border border-white/10' : ''}`}
+          >
+            {/* Call side */}
+            <button
+              onClick={() => tap(row.strike, 'call')}
+              className={`col-span-3 grid grid-cols-3 rounded-lg py-1.5 transition-all active:scale-95 ${callSel ? 'bg-blue-500/20' : 'hover:bg-white/5'}`}
+            >
+              <span className={`text-xs font-bold ${callSel ? 'text-blue-300' : 'text-brand-muted'}`}>{row.callBid.toFixed(2)}</span>
+              <span className={`text-xs font-bold ${callSel ? 'text-blue-400' : 'text-brand-white'}`}>{row.callAsk.toFixed(2)}</span>
+              <span className="text-xs text-brand-muted/60">{row.callVol >= 1000 ? `${(row.callVol / 1000).toFixed(1)}k` : row.callVol}</span>
+            </button>
+
+            {/* Strike */}
+            <span className={`text-xs font-black ${isATM ? 'text-brand-white' : 'text-brand-muted'}`}>
+              {row.strike}
+              {isATM && <span className="block text-brand-purple text-xs font-bold leading-none">ATM</span>}
+            </span>
+
+            {/* Put side */}
+            <button
+              onClick={() => tap(row.strike, 'put')}
+              className={`col-span-3 grid grid-cols-3 rounded-lg py-1.5 transition-all active:scale-95 ${putSel ? 'bg-brand-error/20' : 'hover:bg-white/5'}`}
+            >
+              <span className={`text-xs font-bold ${putSel ? 'text-red-300' : 'text-brand-muted'}`}>{row.putBid.toFixed(2)}</span>
+              <span className={`text-xs font-bold ${putSel ? 'text-brand-error' : 'text-brand-white'}`}>{row.putAsk.toFixed(2)}</span>
+              <span className="text-xs text-brand-muted/60">{row.putVol >= 1000 ? `${(row.putVol / 1000).toFixed(1)}k` : row.putVol}</span>
+            </button>
+          </div>
+        )
+      })}
+
+      {/* Detail panel */}
+      {sel && selected && (
+        <div className={`rounded-2xl border px-4 py-3 animate-slideUp ${selected.side === 'call' ? 'bg-blue-500/10 border-blue-500/40' : 'bg-brand-error/10 border-brand-error/40'}`}>
+          <p className={`font-black text-xs uppercase tracking-widest mb-2 ${selected.side === 'call' ? 'text-blue-400' : 'text-brand-error'}`}>
+            ${selected.strike} {selected.side === 'call' ? 'Call' : 'Put'} · {selected.strike < STOCK_PRICE ? 'ITM' : selected.strike === STOCK_PRICE ? 'ATM' : 'OTM'}
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <p className="text-brand-muted">Buy at (ask)</p>
+              <p className="text-brand-white font-black text-base">${(selected.side === 'call' ? sel.callAsk : sel.putAsk).toFixed(2)}</p>
+              <p className="text-brand-muted mt-0.5">= ${((selected.side === 'call' ? sel.callAsk : sel.putAsk) * 100).toFixed(0)} per contract</p>
+            </div>
+            <div>
+              <p className="text-brand-muted">Open Interest</p>
+              <p className="text-brand-white font-black text-base">{(selected.side === 'call' ? sel.callOI : sel.putOI).toLocaleString()}</p>
+              <p className={`mt-0.5 font-bold ${(selected.side === 'call' ? sel.callOI : sel.putOI) >= 500 ? 'text-brand-green' : 'text-brand-error'}`}>
+                {(selected.side === 'call' ? sel.callOI : sel.putOI) >= 500 ? '✓ Liquid' : '⚠ Low liquidity'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-white/10">
+            <p className="text-brand-muted text-xs">Spread cost: <span className="text-brand-white font-bold">${((selected.side === 'call' ? sel.callAsk - sel.callBid : sel.putAsk - sel.putBid) * 100).toFixed(0)}</span> per contract — paid on entry</p>
+          </div>
+        </div>
+      )}
+
+      {!selected && (
+        <p className="text-brand-muted text-xs text-center">Tap any row to see contract details</p>
+      )}
+    </div>
+  )
+}
+
+// ─── Theta Decay ──────────────────────────────────────────────────
+function ThetaDecayDemo() {
+  const PREMIUM = 200
+  const DAYS = 60
+
+  // Theta decay: time value = premium * sqrt(DTE/60) approximation for visual curve
+  function valueAt(dte: number) {
+    return Math.round(PREMIUM * Math.sqrt(dte / DAYS))
+  }
+
+  const [currentDTE, setCurrentDTE] = useState(60)
+  const currentValue = valueAt(currentDTE)
+  const lost = PREMIUM - currentValue
+  const lostPct = Math.round((lost / PREMIUM) * 100)
+
+  // Build bar chart data — show every 10 days
+  const BARS = [60, 50, 40, 30, 20, 14, 7, 3, 0]
+
+  function advance() {
+    haptics.tap()
+    setCurrentDTE(d => {
+      if (d >= 50) return d - 10
+      if (d === 40) return 30
+      if (d === 30) return 20
+      if (d === 20) return 14
+      if (d === 14) return 7
+      if (d === 7) return 3
+      if (d === 3) return 0
+      return 0
+    })
+  }
+
+  function reset() { haptics.tap(); setCurrentDTE(60) }
+
+  const isDangerous = currentDTE <= 14
+  const isAlmostGone = currentDTE <= 3
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* Main display */}
+      <div className={`rounded-2xl border-2 px-5 py-4 text-center transition-all duration-500 ${
+        isAlmostGone ? 'bg-brand-error/10 border-brand-error' :
+        isDangerous ? 'bg-yellow-500/10 border-yellow-500' :
+        'bg-brand-surface border-white/10'
+      }`}>
+        <p className="text-brand-muted text-xs mb-1">{currentDTE} days to expiration</p>
+        <p className={`font-black text-4xl transition-all duration-500 ${
+          isAlmostGone ? 'text-brand-error' : isDangerous ? 'text-yellow-400' : 'text-brand-white'
+        }`}>${currentValue}</p>
+        <p className="text-brand-muted text-xs mt-1">option value remaining</p>
+        {lost > 0 && (
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-brand-error text-sm font-bold">−${lost} lost to theta ({lostPct}%)</p>
+            {isDangerous && !isAlmostGone && <p className="text-yellow-400 text-xs mt-1 font-semibold">⚠ Decay is accelerating — dangerous zone</p>}
+            {isAlmostGone && <p className="text-brand-error text-xs mt-1 font-semibold">🚨 Last days — theta is brutal here</p>}
+          </div>
+        )}
+      </div>
+
+      {/* Bar visualization */}
+      <div className="flex items-end gap-1.5 h-20">
+        {BARS.map(dte => {
+          const val = valueAt(dte)
+          const heightPct = (val / PREMIUM) * 100
+          const isPast = dte > currentDTE
+          const isCurrent = dte === currentDTE
+          const isRed = dte <= 14
+
+          return (
+            <div key={dte} className="flex-1 flex flex-col items-center gap-1">
+              <div className="w-full flex items-end" style={{ height: 60 }}>
+                <div
+                  className={`w-full rounded-t transition-all duration-500 ${
+                    isPast ? 'bg-white/5' :
+                    isCurrent ? (isRed ? 'bg-brand-error' : 'bg-brand-purple') :
+                    isRed ? 'bg-brand-error/40' : 'bg-brand-purple/30'
+                  }`}
+                  style={{ height: `${heightPct}%` }}
+                />
+              </div>
+              <span className={`text-xs ${isCurrent ? 'text-brand-white font-black' : isPast ? 'text-white/20' : 'text-brand-muted/50'}`}>
+                {dte}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-brand-muted/50 text-xs text-center -mt-2">Days to expiration →</p>
+
+      {/* Controls */}
+      <div className="flex gap-2">
+        {currentDTE > 0 ? (
+          <button
+            onClick={advance}
+            className="flex-1 bg-brand-purple text-brand-white font-black py-3 rounded-2xl active:scale-95 transition-all text-sm"
+          >
+            Advance Time →
+          </button>
+        ) : (
+          <button
+            onClick={reset}
+            className="flex-1 bg-brand-surface border border-white/10 text-brand-muted font-bold py-3 rounded-2xl active:scale-95 text-sm"
+          >
+            Reset ↺
+          </button>
+        )}
+      </div>
+
+      {currentDTE === 0 && (
+        <div className="bg-brand-error/20 border border-brand-error rounded-2xl px-4 py-3 text-center animate-slideUp">
+          <p className="text-brand-error font-black text-sm">Option expired worthless</p>
+          <p className="text-brand-muted text-xs mt-1">$200 → $0. Every day you hold, theta takes its cut.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main export ──────────────────────────────────────────────────
 interface DemoSlideProps {
   demoType: string
@@ -817,6 +1301,9 @@ export function DemoSlide({ demoType, heading }: DemoSlideProps) {
       {demoType === 'dca' && <DCADemo />}
       {demoType === 'portfolio-bars' && <PortfolioDemo />}
       {demoType === 'candlestick-anatomy' && <CandlestickAnatomyDemo />}
+      {demoType === 'position-sizing' && <PositionSizingDemo />}
+      {demoType === 'options-chain' && <OptionsChainDemo />}
+      {demoType === 'theta-decay' && <ThetaDecayDemo />}
     </div>
   )
 }

@@ -118,13 +118,20 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 - Unit 3: The Full Picture (earnings reports, market cycles + bull/bear demo, building a strategy, pre-trade checklist, final quiz)
 - Final lesson ID: `lv3-l5` — unlocks Wealth Building track
 
-### Wealth Building Closer ⏳ NOT YET BUILT — unlocks after Leveler (`lv3-l5` complete)
-1. The difference between an asset and a liability
-2. How the wealthy use the stock market as a tool, not a gamble
-3. Saving with purpose — emergency fund, investment fund, spending money
-4. Compound interest — why starting early beats starting big
-5. Generational wealth — what it is and how regular people build it
-6. Your next step — you have the knowledge, now build the habit
+### Wealth Building Track ✅ BUILT — 3 units, 11 lessons — unlocks after Leveler (`lv3-l5` complete)
+- Unit 1: wb1-l1 (Assets vs Liabilities), wb1-l2 (How Wealthy Use Market), wb1-l3 (Starting Small — $150 reality), wb1-l4 (Quiz)
+- Unit 2: wb2-l1 (Saving With Purpose), wb2-l2 (Compound Interest + savings-vs-investing demo), wb2-l3 (ETFs vs Stocks + portfolio-bars demo), wb2-l4 (Quiz)
+- Unit 3: wb3-l1 (Generational Wealth), wb3-l2 (Your Next Step), wb3-l3 (Final Quiz)
+- Final lesson ID: `wb3-l3`
+- Progress key: `stockly_wealth_progress` | XP key: `stockly_wealth_xp`
+
+### Options Trading Track ✅ BUILT — 4 units, 20 lessons — unlocks after Builder (`b3-l5` complete)
+- Unit 1 (op1, blue-500): The Contract — what you own, calls/puts, premium, reading the chain + options-chain demo, strike + expiration, ITM/ATM/OTM, quiz
+- Unit 2 (op2, brand-purple): The Greeks — delta, theta + theta-decay demo, implied volatility, gamma/vega, quiz
+- Unit 3 (op3, brand-green): Entries & Exits — buying calls, buying puts, position sizing + position-sizing demo, managing the trade, quiz
+- Unit 4 (op4, red-400): Real Strategy — trend trading, support/resistance + price-range demo, earnings plays, the Wheel, final quiz (40 XP)
+- Final lesson ID: `op4-l5`
+- Progress key: `stockly_options_progress` | XP key: `stockly_options_xp`
 
 ## Project Structure
 ```
@@ -154,7 +161,11 @@ stock-game/
 │   │   ├── builder/page.tsx                # Builder track — unit map with sequential lesson unlock
 │   │   ├── builder/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   │   ├── leveler/page.tsx                # Leveler track — unit map with sequential lesson unlock
-│   │   └── leveler/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
+│   │   ├── leveler/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
+│   │   ├── wealth/page.tsx                 # Wealth Building track — unit map with sequential lesson unlock
+│   │   ├── wealth/lesson/[lessonId]/page.tsx   # Dynamic lesson route using LessonPlayer
+│   │   ├── options/page.tsx                # Options Trading track — unit map with sequential lesson unlock
+│   │   └── options/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
 │   ├── glossary/page.tsx                   # 60+ stock terms, searchable, filterable by category
 │   ├── about/page.tsx                      # About Stockly
 │   ├── contact/page.tsx                    # Contact form
@@ -193,6 +204,8 @@ stock-game/
 │   ├── starter-lessons.ts                  # Starter track — 4 units, 17 lessons, shared Slide/Lesson/Unit interfaces
 │   ├── builder-lessons.ts                  # Builder track — 3 units, 13 lessons
 │   ├── leveler-lessons.ts                  # Leveler track — 3 units, 14 lessons
+│   ├── wealth-lessons.ts                   # Wealth Building track — 3 units, 11 lessons
+│   ├── options-lessons.ts                  # Options Trading track — 4 units, 20 lessons
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
 │   ├── constants.ts
@@ -243,6 +256,8 @@ stock-game/
 | `bull-bear` | Builder/Leveler | Bull vs Bear / Market Cycles | Tap through 4 market phases, SVG chart redraws |
 | `portfolio-bars` | Builder | Building a Portfolio | Toggle diversification, watch risk meter change color |
 | `candlestick-anatomy` | Leveler | How to Read a Price Chart | SVG candlestick with labeled arrows — tap HIGH/CLOSE/OPEN/LOW to highlight and explain each part |
+| `options-chain` | Options | Reading the Options Chain | Mock options chain (5 strikes × calls/puts) — tap any row to see bid/ask/OI details and liquidity check |
+| `theta-decay` | Options | Theta — Time Is Your Enemy | Animated bar chart showing time value decay from 60 DTE to 0 — advance time to watch value collapse, danger zone highlighted |
 
 **Candlestick anatomy demo specifics** (`candlestick-anatomy`):
 - Large green candlestick SVG with upper wick, body, lower wick
@@ -286,6 +301,10 @@ stock-game/
 | `stockly_builder_xp` | Total XP earned (number string) |
 | `stockly_leveler_progress` | `{ [lessonId]: true }` |
 | `stockly_leveler_xp` | Total XP earned (number string) |
+| `stockly_wealth_progress` | `{ [lessonId]: true }` |
+| `stockly_wealth_xp` | Total XP earned (number string) |
+| `stockly_options_progress` | `{ [lessonId]: true }` |
+| `stockly_options_xp` | Total XP earned (number string) |
 
 ## Navigation System
 
@@ -296,6 +315,7 @@ stock-game/
   - Builder: unlocks if `stockly_level` is `builder`/`leveler` OR starter final lesson (`u4-l5`) is complete
   - Leveler: unlocks if `stockly_level` is `leveler` OR builder final lesson (`b3-l5`) is complete
   - Wealth: unlocks after leveler final lesson (`lv3-l5`) is complete
+  - Options: unlocks after builder final lesson (`b3-l5`) is complete
 - Per-track progress bars + XP display, total XP in header
 - Mobile header (hamburger + logo + XP) hidden on desktop via `md:hidden`
 - Track grid: `flex flex-col md:grid md:grid-cols-2` — 2 columns on desktop
@@ -329,12 +349,11 @@ stock-game/
 - Enrolled users always land on `/learn` dashboard
 
 ## What To Do Next
-1. **Build Wealth Building track** — 6 lessons, unlocks after `lv3-l5`
-2. **Deploy to Vercel** — app is feature-complete enough to ship
-3. Wire `enrollmentComplete` flag when a track is finished
-4. Redesign legacy `/simulator` + `/challenge` pages with Money Moves color system
-5. Commission final bull mascot illustration
+1. **Deploy to Vercel** — app is feature-complete enough to ship
+2. Wire `enrollmentComplete` flag when a track is finished
+3. Redesign legacy `/simulator` + `/challenge` pages with Money Moves color system
+4. Commission final bull mascot illustration
 
 ---
-*Last updated: 2026-05-11 — Leveler track built (3 units, 14 lessons), candlestick anatomy demo added, desktop responsive UI with DesktopSidebar, learn dashboard updated with 2-column grid and hidden mobile header on desktop*
+*Last updated: 2026-05-11 — Wealth Building track (3 units, 11 lessons) + Options Trading track (4 units, 20 lessons) built. Options chain + theta decay interactive demos added. Dashboard now shows 5 tracks with correct unlock logic.*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*

@@ -8,6 +8,8 @@ import { StocklyLogo } from '@/components/StocklyLogo'
 import { STARTER_UNITS } from '@/lib/starter-lessons'
 import { BUILDER_UNITS } from '@/lib/builder-lessons'
 import { LEVELER_UNITS } from '@/lib/leveler-lessons'
+import { WEALTH_UNITS } from '@/lib/wealth-lessons'
+import { OPTIONS_UNITS } from '@/lib/options-lessons'
 
 interface TrackInfo {
   id: string
@@ -67,9 +69,21 @@ const TRACKS: TrackInfo[] = [
     href: '/learn/wealth',
     xpKey: 'stockly_wealth_xp',
     progressKey: 'stockly_wealth_progress',
-    totalLessons: 0,
-    finalLessonId: '',
+    totalLessons: WEALTH_UNITS.reduce((a, u) => a + u.lessons.length, 0),
+    finalLessonId: 'wb3-l3',
     requiredLevel: ['starter', 'builder', 'leveler'],
+  },
+  {
+    id: 'options',
+    title: 'Options Trading',
+    subtitle: 'Contracts, Greeks, entries, exits, trend trading, and the Wheel.',
+    emoji: '📊',
+    href: '/learn/options',
+    xpKey: 'stockly_options_xp',
+    progressKey: 'stockly_options_progress',
+    totalLessons: OPTIONS_UNITS.reduce((a, u) => a + u.lessons.length, 0),
+    finalLessonId: 'op4-l5',
+    requiredLevel: [],
   },
 ]
 
@@ -132,6 +146,12 @@ export default function LearnDashboard() {
     if (track.id === 'wealth') {
       const levelerProgress = progressMap['leveler'] ?? {}
       return !!levelerProgress['lv3-l5']
+    }
+
+    // options: unlocked after completing builder
+    if (track.id === 'options') {
+      const builderProgress = progressMap['builder'] ?? {}
+      return !!builderProgress['b3-l5']
     }
 
     return false
@@ -234,6 +254,8 @@ export default function LearnDashboard() {
                       ? track.id === 'builder'
                         ? 'Complete the Starter track to unlock'
                         : track.id === 'leveler'
+                        ? 'Complete the Builder track to unlock'
+                        : track.id === 'options'
                         ? 'Complete the Builder track to unlock'
                         : 'Complete all tracks to unlock'
                       : track.subtitle}
