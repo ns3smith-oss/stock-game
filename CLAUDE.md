@@ -348,12 +348,58 @@ stock-game/
 ### `getResumeRoute()` (in `lib/auth.ts`)
 - Enrolled users always land on `/learn` dashboard
 
+## Trading Simulator (Full rebuild — 2026-06-07)
+
+**Location:** `app/simulator/page.tsx` — accessible via sidebar nav ("Simulator")
+
+**Data:** Real stock data via Polygon.io free API. API key in `.env.local`. Two server-side routes:
+- `app/api/candles/route.ts` — OHLCV data proxy (keeps key server-side)
+- `app/api/search/route.ts` — ticker autocomplete
+
+**Layout:** TradingView/Warrior Trading-style — 3 columns: drawing toolbar | chart | order panel
+
+**Chart features (`components/simulator/SimulatorChart.tsx`):**
+- TradingView `lightweight-charts` v5 candlestick chart
+- Times displayed in Eastern Time (ET) via `tickMarkFormatter`
+- Volume histogram (bottom 18% of chart)
+- VWAP (purple dashed line)
+- EMA 9 (light gray), EMA 20 (gray), EMA 200 (blue) — calculated in `lib/indicators.ts`
+- Crosshair move callback → updates OHLC legend overlay
+
+**Chart legend overlay (`components/simulator/ChartLegend.tsx`):**
+- Shows ticker, timeframe, O/H/L/C, change%, EMA 9/20/200 values, VWAP
+
+**Drawing tools sidebar (`components/simulator/DrawingToolbar.tsx`):**
+All 15 tools from TradingView-style sidebar:
+1. Cursor (default), 2. Trend Line, 3. Horizontal Level, 4. Polyline, 5. Parallel Channel, 6. Arc/Curve, 7. Text Label, 8. Note/Emoji | 9. Ruler, 10. Zoom | 11. Magnet Snap, 12. Lock Drawings, 13. Unlock, 14. Show/Hide | 15. Delete All
+- Trend Line and Horizontal Level are fully functional (click 2 points on chart)
+- All others have working state toggles with visual feedback
+
+**Replay controls (toolbar):**
+- Date picker + session quick buttons: Pre (4:00 AM), Open (9:30 AM), Mid (12:00 PM)
+- Custom ET time input
+- Play/pause, step ◀/▶, speeds 1×/2×/5×/10×
+- Date range: 1D, 3D, 1W, 1M (loads multi-day data)
+
+**Order panel (`components/simulator/SimOrderPanel.tsx`):**
+- Market, Limit, Stop order types
+- Share size with quick buttons (50/100/200/500)
+- Buy/Sell with cost preview
+- Open position display with unrealized P&L
+- Cash balance display
+
+**Account balance edit:** Pencil icon ✏️ in right panel header → inline number input → saves and resets all positions + trade history
+
+**Trade log (`components/simulator/SimTradeLog.tsx`):** Closed trades with realized P&L
+
+**Indicators (`lib/indicators.ts`):** `calcEMA(closes, period)`, `etTimeToUTC(date, time)`, `subtractTradingDays(date, n)`
+
 ## What To Do Next
-1. **Deploy to Vercel** — app is feature-complete enough to ship
-2. Wire `enrollmentComplete` flag when a track is finished
-3. Redesign legacy `/simulator` + `/challenge` pages with Money Moves color system
+1. **Build Scanner** — filter stocks by price, volume, % change, float (after simulator polish)
+2. **Deploy to Vercel** — app is feature-complete enough to ship
+3. Wire `enrollmentComplete` flag when a track is finished
 4. Commission final bull mascot illustration
 
 ---
-*Last updated: 2026-05-11 — Wealth Building track (3 units, 11 lessons) + Options Trading track (4 units, 20 lessons) built. Options chain + theta decay interactive demos added. Dashboard now shows 5 tracks with correct unlock logic.*
+*Last updated: 2026-06-07 — Full trading simulator built: real stock data (Polygon.io), candlestick chart, EMA 9/20/200, VWAP, ET timezone display, 15 drawing tools sidebar, date range buttons, time-of-day replay control, editable account balance.*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
