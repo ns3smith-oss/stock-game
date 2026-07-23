@@ -93,6 +93,14 @@ export function HamburgerMenu({ userName, userPlan }: HamburgerMenuProps) {
             My Tracks
           </button>
 
+          <button
+            onClick={() => navigate('/scanner')}
+            className="flex items-center gap-4 px-4 py-3 rounded-2xl text-brand-white font-semibold text-sm hover:bg-white/5 active:scale-95 transition-all text-left"
+          >
+            <span className="text-xl w-8 text-center">🚩</span>
+            Scanner
+          </button>
+
           <div className="h-px bg-white/10 my-2" />
 
           {userPlan !== 'pro' && (

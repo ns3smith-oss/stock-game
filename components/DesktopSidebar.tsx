@@ -11,6 +11,7 @@ const XP_KEYS = ['stockly_starter_xp', 'stockly_builder_xp', 'stockly_leveler_xp
 const NAV_ITEMS = [
   { label: 'My Tracks', href: '/learn', emoji: '📚' },
   { label: 'Simulator', href: '/simulator', emoji: '📊' },
+  { label: 'Scanner', href: '/scanner', emoji: '🚩' },
   { label: 'Glossary', href: '/glossary', emoji: '📖' },
   { label: 'Settings', href: '/settings', emoji: '⚙️' },
   { label: 'About', href: '/about', emoji: 'ℹ️' },

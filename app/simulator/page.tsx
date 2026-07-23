@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { TickerSearch } from '@/components/simulator/TickerSearch'
 import { DrawingToolbar, type DrawMode } from '@/components/simulator/DrawingToolbar'
@@ -57,10 +58,22 @@ function oneYearAgoStr() {
 const DEFAULT_CASH = 25000
 
 export default function SimulatorPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-[#131722] text-[#787B86] text-sm">Loading…</div>}>
+      <SimulatorPageInner />
+    </Suspense>
+  )
+}
+
+function SimulatorPageInner() {
+  const searchParams = useSearchParams()
+  const initialTicker = searchParams.get('ticker')?.toUpperCase() || 'AAPL'
+  const initialDate = searchParams.get('date') || lastTradingDay()
+
   // ─── Chart state ───────────────────────────────────────────
-  const [ticker, setTicker] = useState('AAPL')
-  const [tickerName, setTickerName] = useState('Apple Inc.')
-  const [date, setDate] = useState(lastTradingDay)
+  const [ticker, setTicker] = useState(initialTicker)
+  const [tickerName, setTickerName] = useState(initialTicker === 'AAPL' ? 'Apple Inc.' : initialTicker)
+  const [date, setDate] = useState(initialDate)
   const [tfIndex, setTfIndex] = useState(1)        // default 5m
   const [dateRangeIndex, setDateRangeIndex] = useState(0) // default 1D
   const [startTime, setStartTime] = useState('09:30') // ET start time for replay
