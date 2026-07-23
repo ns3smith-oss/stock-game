@@ -166,6 +166,8 @@ stock-game/
 │   │   ├── wealth/lesson/[lessonId]/page.tsx   # Dynamic lesson route using LessonPlayer
 │   │   ├── options/page.tsx                # Options Trading track — unit map with sequential lesson unlock
 │   │   └── options/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
+│   ├── scanner/page.tsx                    # Flag scanner — filters + results table, links into simulator
+│   ├── api/scanner/route.ts                # Whole-market grouped-daily scan, disk-cached per trading day
 │   ├── glossary/page.tsx                   # 60+ stock terms, searchable, filterable by category
 │   ├── about/page.tsx                      # About Stockly
 │   ├── contact/page.tsx                    # Contact form
@@ -208,6 +210,8 @@ stock-game/
 │   ├── options-lessons.ts                  # Options Trading track — 4 units, 20 lessons
 │   ├── gameState.ts
 │   ├── stockSimulator.ts
+│   ├── indicators.ts                       # calcEMA, etTimeToUTC, subtractTradingDays
+│   ├── scanner.ts                          # Flag-pattern detector (pole + flag on daily bars)
 │   ├── constants.ts
 │   └── utils.ts
 ├── types/index.ts
@@ -394,12 +398,43 @@ All 15 tools from TradingView-style sidebar:
 
 **Indicators (`lib/indicators.ts`):** `calcEMA(closes, period)`, `etTimeToUTC(date, time)`, `subtractTradingDays(date, n)`
 
+## Flag Scanner (Built 2026-07-22)
+
+**Location:** `app/scanner/page.tsx` — accessible via sidebar/hamburger nav ("Scanner")
+
+**What it looks for:** stocks under $20 with a high-volume "pole" move (sharp % gain on elevated relative volume) followed by a tight, lower-volume "flag" consolidation that hasn't given back most of the gain. Runs entirely on **daily bars**, not intraday — see plan limitation below.
+
+**Data source (`app/api/scanner/route.ts`):**
+- Pulls Polygon's grouped-daily endpoint (`/v2/aggs/grouped/...`) — one API call returns the whole market (~13,000 tickers) for a single day
+- Fetches a rolling lookback window (default 30 trading days) to build enough history per ticker for the pole/flag math + a 10-day volume baseline
+- **Disk-cached per trading day** in `.scanner-cache/` (gitignored, machine-local) — completed days never change, so re-scanning only fetches new days. First run on a new machine is slow; later runs are fast.
+- **Polygon plan gate:** the current key is on the **free tier** — 5 calls/min, no same-day intraday or real-time data. `POLYGON_PLAN=free` in `.env.local` throttles live calls to ~1/12.5s to stay under the limit. This means the scanner only ever shows what formed through last night's close — it does **not** update live during market hours. When the Polygon plan is upgraded (Starter, $29/mo+), set `POLYGON_PLAN` to anything else in `.env.local` to remove the throttle; a true live/intraday scanner would still need new work beyond that (this version only reads daily bars).
+
+**Detection logic (`lib/scanner.ts` — `detectFlag()`):** tries all plausible pole (1–5 days) + flag (1–8 days) windows within a ticker's bar history and keeps the highest-confidence match. Tunable constants at the top of the file:
+| Constant | Default | Meaning |
+|---|---|---|
+| `MIN_POLE_GAIN_PCT` | 15 | Pole must gain at least this % |
+| `MIN_POLE_REL_VOL` | 2 | Pole's peak volume vs. 10-day baseline average |
+| `MAX_POLE_LEN` / flag days | 5 / 1–8 | How many days the pole/flag windows can span |
+| `MAX_RETRACE_PCT` | 50 | Flag can't retrace more than this % of the pole's move |
+| `MAX_FLAG_RANGE_PCT` | 20 | Flag's high-low range vs. pole high — tightness cap |
+| `BASELINE_WINDOW` | 10 | Days used to compute "normal" volume before the pole |
+
+Confidence score (0–100) blends pole strength, relative volume, flag tightness, shallow retracement, and declining volume trend.
+
+**Scanner page filters:** min/max price (default $1–$20), min pole relative volume (default 2×) — set client-side, sent as query params to `/api/scanner`. A `minAvgVolume` floor (200K shares/day, server-side default) filters out illiquid names regardless of relative-volume spike.
+
+**"View Chart" button:** deep-links into the simulator via `/simulator?ticker=X&date=Y` (simulator reads these via `useSearchParams`, wrapped in `<Suspense>` per Next.js requirement).
+
+**Validated 2026-07-22:** 30-day scan found 28 candidates; top match ATAI (43.6% pole gain, 11.8× rel vol, 2-day flag, 1.9% range, declining volume, confidence 95.7).
+
 ## What To Do Next
-1. **Build Scanner** — filter stocks by price, volume, % change, float (after simulator polish)
-2. **Deploy to Vercel** — app is feature-complete enough to ship
-3. Wire `enrollmentComplete` flag when a track is finished
-4. Commission final bull mascot illustration
+1. ~~Build Scanner~~ ✅ Built 2026-07-22 (daily-bar only — needs a paid Polygon plan for live intraday scanning)
+2. **Deploy to Vercel** — app is feature-complete enough to ship (note: scanner's ~5min cold-scan runtime may exceed serverless function timeouts; the disk cache also won't persist on Vercel's ephemeral filesystem — would need a real cache store like Vercel KV before deploying the scanner)
+3. Upgrade Polygon plan when trading profits allow, then flip `POLYGON_PLAN` in `.env.local` and consider adding true intraday scanning
+4. Wire `enrollmentComplete` flag when a track is finished
+5. Commission final bull mascot illustration
 
 ---
-*Last updated: 2026-06-07 — Full trading simulator built: real stock data (Polygon.io), candlestick chart, EMA 9/20/200, VWAP, ET timezone display, 15 drawing tools sidebar, date range buttons, time-of-day replay control, editable account balance.*
+*Last updated: 2026-07-22 — Built flag-pattern scanner: whole-market daily-bar scan via Polygon grouped-daily endpoint, disk-cached per trading day, pole+flag detection under $20, confidence scoring, deep-links into simulator.*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
