@@ -25,15 +25,6 @@ export interface CandleData {
   vwap?: number
 }
 
-export interface DrawnLine {
-  id: string
-  time1: number
-  price1: number
-  time2: number
-  price2: number
-  type: 'trend' | 'horizontal'
-}
-
 export interface EMAData {
   ema9: (number | null)[]
   ema20: (number | null)[]
@@ -42,16 +33,19 @@ export interface EMAData {
 
 export interface SimulatorChartHandle {
   getContainerRect: () => DOMRect | null
+  timeToX: (time: number) => number | null
+  priceToY: (price: number) => number | null
+  xToTime: (x: number) => number | null
+  yToPrice: (y: number) => number | null
+  subscribeRangeChange: (cb: () => void) => void
+  unsubscribeRangeChange: (cb: () => void) => void
+  setVisibleTimeRange: (from: number, to: number) => void
 }
 
 interface Props {
   candles: CandleData[]
   emaData: EMAData
-  drawnLines: DrawnLine[]
-  drawingMode: string
-  onLineAdded: (line: DrawnLine) => void
   onCrosshairMove: (info: CrosshairInfo | null) => void
-  drawingsVisible: boolean
 }
 
 // Format a UTC timestamp as Eastern Time
@@ -70,7 +64,7 @@ function fmtET(ts: number, tickType: number): string {
 }
 
 export const SimulatorChart = forwardRef<SimulatorChartHandle, Props>(
-  ({ candles, emaData, drawnLines, drawingMode, onLineAdded, onCrosshairMove, drawingsVisible }, ref) => {
+  ({ candles, emaData, onCrosshairMove }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const chartRef = useRef<IChartApi | null>(null)
     const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -79,14 +73,19 @@ export const SimulatorChart = forwardRef<SimulatorChartHandle, Props>(
     const ema9SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
     const ema20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
     const ema200SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
-    const lineSeriesMapRef = useRef<Map<string, ISeriesApi<'Line'>>>(new Map())
-    const pendingPointRef = useRef<{ time: number; price: number } | null>(null)
     const candlesRef = useRef<CandleData[]>([])
     const emaDataRef = useRef<EMAData>(emaData)
 
     useImperativeHandle(ref, () => ({
       getContainerRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-    }))
+      timeToX:  (t) => chartRef.current?.timeScale().timeToCoordinate(t as UTCTimestamp) as number ?? null,
+      priceToY: (p) => candleSeriesRef.current?.priceToCoordinate(p) as number ?? null,
+      xToTime:  (x) => chartRef.current?.timeScale().coordinateToTime(x) as number ?? null,
+      yToPrice: (y) => candleSeriesRef.current?.coordinateToPrice(y) ?? null,
+      subscribeRangeChange:   (cb) => chartRef.current?.timeScale().subscribeVisibleLogicalRangeChange(cb),
+      unsubscribeRangeChange: (cb) => chartRef.current?.timeScale().unsubscribeVisibleLogicalRangeChange(cb),
+      setVisibleTimeRange: (from, to) => chartRef.current?.timeScale().setVisibleRange({ from: from as UTCTimestamp, to: to as UTCTimestamp }),
+    }), [])
 
     // Create chart once
     useEffect(() => {
@@ -265,84 +264,8 @@ export const SimulatorChart = forwardRef<SimulatorChartHandle, Props>(
       ema200SeriesRef.current.setData(toLineData(emaData.ema200))
     }, [candles, emaData])
 
-    // Sync drawn lines
-    useEffect(() => {
-      if (!chartRef.current) return
-
-      const existingIds = new Set(lineSeriesMapRef.current.keys())
-      const newIds = new Set(drawnLines.map((l) => l.id))
-
-      existingIds.forEach((id) => {
-        if (!newIds.has(id)) {
-          const s = lineSeriesMapRef.current.get(id)
-          if (s) chartRef.current!.removeSeries(s)
-          lineSeriesMapRef.current.delete(id)
-        }
-      })
-
-      drawnLines.forEach((line) => {
-        if (lineSeriesMapRef.current.has(line.id)) return
-        const s = chartRef.current!.addSeries(LineSeries, {
-          color: '#FFD700',
-          lineWidth: 1,
-          lineStyle: line.type === 'horizontal' ? LineStyle.Dashed : LineStyle.Solid,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          crosshairMarkerVisible: false,
-          visible: drawingsVisible,
-        })
-        s.setData([
-          { time: line.time1 as UTCTimestamp, value: line.price1 },
-          { time: line.time2 as UTCTimestamp, value: line.price2 },
-        ])
-        lineSeriesMapRef.current.set(line.id, s)
-      })
-    }, [drawnLines, drawingsVisible])
-
-    // Toggle drawings visibility
-    useEffect(() => {
-      lineSeriesMapRef.current.forEach((s) => {
-        s.applyOptions({ visible: drawingsVisible })
-      })
-    }, [drawingsVisible])
-
-    // Drawing click handler
-    useEffect(() => {
-      if (!chartRef.current || !candleSeriesRef.current) return
-      if (drawingMode === 'cursor') { pendingPointRef.current = null; return }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const handler = (param: any) => {
-        if (!param.point || !param.time || !candleSeriesRef.current) return
-        if (!['trend', 'horizontal'].includes(drawingMode)) return
-        const price = candleSeriesRef.current.coordinateToPrice(param.point.y)
-        if (price == null) return
-        const time = param.time as number
-
-        if (!pendingPointRef.current) {
-          pendingPointRef.current = { time, price }
-        } else {
-          const { time: t1, price: p1 } = pendingPointRef.current
-          onLineAdded({
-            id: `line-${Date.now()}`,
-            time1: t1,
-            price1: p1,
-            time2: time,
-            price2: drawingMode === 'horizontal' ? p1 : price,
-            type: drawingMode as 'trend' | 'horizontal',
-          })
-          pendingPointRef.current = null
-        }
-      }
-
-      chartRef.current.subscribeClick(handler)
-      return () => chartRef.current?.unsubscribeClick(handler)
-    }, [drawingMode, onLineAdded])
-
-    const isCrossMode = ['trend', 'horizontal', 'polyline', 'channel', 'arc', 'text', 'note', 'ruler', 'zoom'].includes(drawingMode)
-
     return (
-      <div ref={containerRef} className={`w-full h-full ${isCrossMode ? 'cursor-crosshair' : 'cursor-default'}`} />
+      <div ref={containerRef} className="w-full h-full cursor-default" />
     )
   }
 )

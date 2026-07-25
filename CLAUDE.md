@@ -166,8 +166,12 @@ stock-game/
 │   │   ├── wealth/lesson/[lessonId]/page.tsx   # Dynamic lesson route using LessonPlayer
 │   │   ├── options/page.tsx                # Options Trading track — unit map with sequential lesson unlock
 │   │   └── options/lesson/[lessonId]/page.tsx  # Dynamic lesson route using LessonPlayer
-│   ├── scanner/page.tsx                    # Flag scanner — filters + results table, links into simulator
+│   ├── scanner/page.tsx                    # Scanner Hub — 3-tab layout (Setups, Live, Matches)
 │   ├── api/scanner/route.ts                # Whole-market grouped-daily scan, disk-cached per trading day
+│   ├── api/scanner/history/route.ts        # 1-year bar history + findAllFlags() — past flag outcomes per ticker
+│   ├── api/scanner/live/route.ts           # Live momentum scanner — grouped-daily, 5-day RVOL baseline
+│   ├── study/layout.tsx                    # Standalone layout (no sidebar) — TradingView dark theme
+│   └── study/[ticker]/page.tsx             # Dual-pane study window: daily + intraday charts, replay, history panel
 │   ├── glossary/page.tsx                   # 60+ stock terms, searchable, filterable by category
 │   ├── about/page.tsx                      # About Stockly
 │   ├── contact/page.tsx                    # Contact form
@@ -179,6 +183,10 @@ stock-game/
 │   ├── StocklyLogo.tsx                     # SVG S-mark logo — purple ribbon S + candlesticks
 │   ├── DesktopSidebar.tsx                  # Persistent left sidebar for md+ screens — logo, nav, XP, user, sign out
 │   ├── HamburgerMenu.tsx                   # Slide-in nav drawer — mobile only, dashboard only
+│   ├── scanner/
+│   │   ├── SetupTab.tsx                    # Flag setup scanner tab (streamed, with historical expand rows)
+│   │   ├── LiveTab.tsx                     # Live momentum scanner tab (RVOL + change% filter)
+│   │   └── MatchesTab.tsx                  # Intersection of both scanners — highest-conviction plays
 │   ├── ui/
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
@@ -398,19 +406,22 @@ All 15 tools from TradingView-style sidebar:
 
 **Indicators (`lib/indicators.ts`):** `calcEMA(closes, period)`, `etTimeToUTC(date, time)`, `subtractTradingDays(date, n)`
 
-## Flag Scanner (Built 2026-07-22)
+## Scanner Hub (Built 2026-07-22, expanded 2026-07-25)
 
 **Location:** `app/scanner/page.tsx` — accessible via sidebar/hamburger nav ("Scanner")
 
-**What it looks for:** stocks under $20 with a high-volume "pole" move (sharp % gain on elevated relative volume) followed by a tight, lower-volume "flag" consolidation that hasn't given back most of the gain. Runs entirely on **daily bars**, not intraday — see plan limitation below.
+Three tabs, each with an in-page description banner explaining when to use it:
+
+### Tab 1: Setups (`components/scanner/SetupTab.tsx`) — 🌙 "Run this the night before"
+**What it looks for:** stocks under $20 with a high-volume "pole" move (sharp % gain on elevated relative volume) followed by a tight, lower-volume "flag" consolidation. Runs on **daily bars** only.
 
 **Data source (`app/api/scanner/route.ts`):**
-- Pulls Polygon's grouped-daily endpoint (`/v2/aggs/grouped/...`) — one API call returns the whole market (~13,000 tickers) for a single day
-- Fetches a rolling lookback window (default 30 trading days) to build enough history per ticker for the pole/flag math + a 10-day volume baseline
-- **Disk-cached per trading day** in `.scanner-cache/` (gitignored, machine-local) — completed days never change, so re-scanning only fetches new days. First run on a new machine is slow; later runs are fast.
-- **Polygon plan gate:** the current key is on the **free tier** — 5 calls/min, no same-day intraday or real-time data. `POLYGON_PLAN=free` in `.env.local` throttles live calls to ~1/12.5s to stay under the limit. This means the scanner only ever shows what formed through last night's close — it does **not** update live during market hours. When the Polygon plan is upgraded (Starter, $29/mo+), set `POLYGON_PLAN` to anything else in `.env.local` to remove the throttle; a true live/intraday scanner would still need new work beyond that (this version only reads daily bars).
+- Pulls Polygon's grouped-daily endpoint — one call returns the whole market (~13,000 tickers) per day
+- 30-day rolling lookback window for pole/flag math + 10-day volume baseline
+- **Disk-cached per trading day** in `.scanner-cache/` (gitignored, machine-local)
+- **Free plan gate:** `POLYGON_PLAN=free` throttles to ~1/12.5s. Scanner shows last night's close only — no intraday.
 
-**Detection logic (`lib/scanner.ts` — `detectFlag()`):** tries all plausible pole (1–5 days) + flag (1–8 days) windows within a ticker's bar history and keeps the highest-confidence match. Tunable constants at the top of the file:
+**Detection logic (`lib/scanner.ts` — `detectFlag()` + `findAllFlags()`):**
 | Constant | Default | Meaning |
 |---|---|---|
 | `MIN_POLE_GAIN_PCT` | 15 | Pole must gain at least this % |
@@ -422,19 +433,58 @@ All 15 tools from TradingView-style sidebar:
 
 Confidence score (0–100) blends pole strength, relative volume, flag tightness, shallow retracement, and declining volume trend.
 
-**Scanner page filters:** min/max price (default $1–$20), min pole relative volume (default 2×) — set client-side, sent as query params to `/api/scanner`. A `minAvgVolume` floor (200K shares/day, server-side default) filters out illiquid names regardless of relative-volume spike.
+**Historical flag rows:** each candidate has an expandable row showing past flag patterns over the last year — outcome classified as `breakout` (up 5%+ in 5 days), `failed` (down 5%+), or `neutral`. Win rate displayed. Fetched from `/api/scanner/history` (disk/KV cached per ticker per day). `findAllFlags()` slides a window through 1-year bar history, skips overlapping patterns.
 
-**"View Chart" button:** deep-links into the simulator via `/simulator?ticker=X&date=Y` (simulator reads these via `useSearchParams`, wrapped in `<Suspense>` per Next.js requirement).
+**"Study →" button:** opens `/study/[ticker]?date=Y` in a new tab (not the simulator).
 
-**Validated 2026-07-22:** 30-day scan found 28 candidates; top match ATAI (43.6% pole gain, 11.8× rel vol, 2-day flag, 1.9% range, declining volume, confidence 95.7).
+### Tab 2: Live (`components/scanner/LiveTab.tsx`) — ☀️ "Run this the morning of your session"
+**What it looks for:** stocks already moving big on the day — high % change + high RVOL. No pattern required. Pure momentum filter.
+
+**Data source (`app/api/scanner/live/route.ts`):**
+- Fetches 6 days of grouped-daily (5 baseline + 1 target) using same endpoint + cache as Setup scanner
+- Computes `changePct` (vs prior close), `gapPct` (open vs prior close), `todayRelVol` (vs 5-day avg)
+- Filters: price $1–$20, changePct ≥ 10%, RVOL ≥ 3×, avgVol ≥ 200K
+- Returns top 100 sorted by % change, streamed as NDJSON
+- Includes free-plan notice; same `POLYGON_PLAN` env gate
+
+**"View →" button:** opens `/study/[ticker]?date=asOfDate` in a new tab.
+
+### Tab 3: Matches (`components/scanner/MatchesTab.tsx`) — 🎯 "Check this last"
+Computes the intersection of Setups and Live results. Stocks appearing in both = flag pattern confirmed the night before **and** showing real momentum the next morning. Highest-conviction watch list.
+
+- Status indicators when either scan hasn't been run yet
+- Split-column table: Setup data (pole%, flag days, score) | Live data (change%, gap%, RVOL)
+- Warning if both scans return the same date (ideal: Setup=day N, Live=day N+1)
+- Green "Study →" opens `/study/[ticker]?date=liveDate`
+- Match count badge pulses green in tab nav when both scans have run
+
+### Study Window (Built 2026-07-25)
+
+**Location:** `/study/[ticker]?date=YYYY-MM-DD` — opens in a **new tab** from any scanner "Study →" or "View →" button. Separate from the simulator (`/simulator`).
+
+**Layout:**
+- Standalone layout (`app/study/layout.tsx`) — no sidebar, TradingView dark theme (`#131722`)
+- Top bar: back link, ticker, intraday TF selector (1m/5m/15m/1H), date picker
+- Daily pane (top ~45%): 1 year of daily bars, replay controls, scrolls to focusDate on load
+- Intraday pane (bottom ~55%): bars for the selected date + timeframe, replay controls
+- History sidebar (right 280px): past flag patterns from `/api/scanner/history`, clicking a row calls `selectFlagDate()` which updates both panes
+
+**Replay controls (each pane has its own `ReplayBar` component):** step ◀/▶, play/pause, speed selector (1×/2×/5×/10×), bar count
+
+**"Paper trade this setup →"** footer link deep-links into `/simulator?ticker=X&date=Y`
+
+**`setVisibleTimeRange(from, to)`** — method added to `SimulatorChartHandle` ref API — used to scroll the daily chart to the selected flag date without a full reload.
 
 ## What To Do Next
 1. ~~Build Scanner~~ ✅ Built 2026-07-22 (daily-bar only — needs a paid Polygon plan for live intraday scanning)
-2. **Deploy to Vercel** — app is feature-complete enough to ship (note: scanner's ~5min cold-scan runtime may exceed serverless function timeouts; the disk cache also won't persist on Vercel's ephemeral filesystem — would need a real cache store like Vercel KV before deploying the scanner)
-3. Upgrade Polygon plan when trading profits allow, then flip `POLYGON_PLAN` in `.env.local` and consider adding true intraday scanning
-4. Wire `enrollmentComplete` flag when a track is finished
-5. Commission final bull mascot illustration
+2. ~~Build Scanner Hub~~ ✅ Built 2026-07-25 — 3 tabs (Setups, Live, Matches), historical flag outcomes, description banners
+3. ~~Build Study Window~~ ✅ Built 2026-07-25 — `/study/[ticker]`, dual-pane chart, replay controls, history sidebar
+4. **Fix drawing tools in simulator** — toolbar buttons still not activating chart drawing mode; root cause suspected in `next/dynamic` ref forwarding or coordinate mismatch between `DrawingCanvas` SVG and chart canvas
+5. **Deploy to Vercel** — app is feature-complete enough to ship (scanner disk cache won't persist on Vercel — needs Vercel KV before deploying scanner; cold-scan ~5min may hit serverless timeout)
+6. Upgrade Polygon plan → flip `POLYGON_PLAN` in `.env.local` → enables true live intraday scanning
+7. Wire `enrollmentComplete` flag when a track is finished
+8. Commission final bull mascot illustration
 
 ---
-*Last updated: 2026-07-22 — Built flag-pattern scanner: whole-market daily-bar scan via Polygon grouped-daily endpoint, disk-cached per trading day, pole+flag detection under $20, confidence scoring, deep-links into simulator.*
+*Last updated: 2026-07-25 — Built Scanner Hub (3 tabs: Setups/Live/Matches), historical flag outcome rows, live momentum scanner API, Study Window (/study/[ticker]) with dual-pane chart + replay controls + history sidebar, description banners on all scanner tabs.*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*

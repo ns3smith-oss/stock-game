@@ -418,10 +418,15 @@ const BTN_ICONS: Record<string, React.ReactNode> = {
 // Map sub-tool IDs to actual drawMode strings for the chart
 const DRAW_MODE_MAP: Record<string, string> = {
   'cross': 'cursor', 'dot': 'cursor', 'arrow': 'cursor', 'eraser': 'cursor',
-  'trend-line': 'trend', 'ray': 'trend', 'extended-line': 'trend',
+  'trend-line': 'trend',
+  'ray': 'trend',
+  'extended-line': 'extended',
   'horizontal-line': 'horizontal', 'horizontal-ray': 'horizontal',
   'vertical-line': 'vertical',
-  'long-position': 'long-position', 'short-position': 'short-position',
+  'parallel-channel': 'channel',
+  'rectangle': 'rectangle',
+  'fib-retracement': 'fib',
+  'long-position': 'cursor', 'short-position': 'cursor',
   'ruler': 'cursor', 'zoom': 'cursor',
   'weak-magnet': 'cursor', 'strong-magnet': 'cursor',
 }
@@ -485,20 +490,19 @@ export function DrawingToolbar({
     setSelectedSub((prev) => ({ ...prev, [category]: subId }))
     const dm = DRAW_MODE_MAP[subId] ?? 'cursor'
     onToolChange(subId, dm)
-    setOpenMenu(null)
+    setOpenMenu(null)  // always close flyout after selecting a sub-tool
 
-    // Special magnet handling
     if (subId === 'weak-magnet') onMagnetChange('weak')
     if (subId === 'strong-magnet') onMagnetChange('strong')
   }
 
-  // Determine which main category is active
-  function getCategoryOfTool(toolId: string): string | null {
+  // Determine which main category contains this sub-tool ID
+  function getCategoryOfTool(subToolId: string): string | null {
     for (const btn of TOOL_BUTTONS) {
       for (const g of btn.groups) {
-        if (g.items.some((i) => i.id === toolId)) return btn.id
+        if (g.items.some((i) => i.id === subToolId)) return btn.id
       }
-      if (btn.id === toolId) return btn.id
+      if (btn.id === subToolId) return btn.id
     }
     return null
   }
@@ -531,7 +535,19 @@ export function DrawingToolbar({
                 if (btn.id === 'lock') { onLockToggle(); return }
                 if (btn.id === 'unlock') { onLockToggle(); return }
                 if (btn.id === 'visibility') { onVisibilityToggle(); return }
-                openFlyout(btn.id)
+                // If this category is already active, deactivate (go to cursor)
+                const isThisCategoryActive = activeCategory === btn.id && activeTool !== 'cross'
+                if (isThisCategoryActive && openMenu !== btn.id) {
+                  onToolChange('cross', 'cursor')
+                  setOpenMenu(null)
+                  return
+                }
+                // Immediately activate the current sub-tool for this category
+                const currentSub = selectedSub[btn.id] ?? btn.defaultSub
+                const dm = DRAW_MODE_MAP[currentSub] ?? 'cursor'
+                onToolChange(currentSub, dm)
+                // Open flyout for sub-tool selection (closes automatically when user clicks chart)
+                if (btn.groups.length > 0) openFlyout(btn.id)
               }}
               title={btn.tooltip}
               className={`w-9 h-9 flex items-center justify-center rounded transition-colors ${

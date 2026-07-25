@@ -10,7 +10,8 @@ import { SimOrderPanel, type Position, type Trade } from '@/components/simulator
 import { SimTradeLog } from '@/components/simulator/SimTradeLog'
 import { ChartLegend, type CrosshairInfo } from '@/components/simulator/ChartLegend'
 import { calcEMA, etTimeToUTC, subtractTradingDays } from '@/lib/indicators'
-import type { CandleData, DrawnLine, SimulatorChartHandle } from '@/components/simulator/SimulatorChart'
+import type { CandleData, SimulatorChartHandle } from '@/components/simulator/SimulatorChart'
+import { DrawingCanvas, type Drawing } from '@/components/simulator/DrawingCanvas'
 
 const SimulatorChart = dynamic(
   () => import('@/components/simulator/SimulatorChart').then((m) => m.SimulatorChart),
@@ -86,7 +87,8 @@ function SimulatorPageInner() {
 
   // ─── Drawing tools ─────────────────────────────────────────
   const [drawMode, setDrawMode] = useState<DrawMode>('cursor')
-  const [drawnLines, setDrawnLines] = useState<DrawnLine[]>([])
+  const [activeSubTool, setActiveSubTool] = useState<string>('cross')
+  const [drawings, setDrawings] = useState<Drawing[]>([])
   const [drawingsLocked, setDrawingsLocked] = useState(false)
   const [drawingsVisible, setDrawingsVisible] = useState(true)
   const [magnetMode, setMagnetMode] = useState<'off' | 'weak' | 'strong'>('off')
@@ -185,10 +187,16 @@ function SimulatorPageInner() {
   }, [isPlaying, speed, allCandles.length])
 
   // ─── Drawing handlers ────────────────────────────────────────
-  const handleLineAdded = useCallback((line: DrawnLine) => {
+  const handleToolChange = useCallback((subToolId: string, dm: string) => {
+    setDrawMode(dm)
+    setActiveSubTool(subToolId)
+  }, [])
+
+  const handleDrawingAdded = useCallback((d: Drawing) => {
     if (drawingsLocked) return
-    setDrawnLines((prev) => [...prev, line])
+    setDrawings((prev) => [...prev, d])
     setDrawMode('cursor')
+    setActiveSubTool('cross')
   }, [drawingsLocked])
 
   // ─── Trade handlers ──────────────────────────────────────────
@@ -331,9 +339,9 @@ function SimulatorPageInner() {
 
         {/* Drawing tools sidebar */}
         <DrawingToolbar
-          activeTool={drawMode}
-          onToolChange={(_toolId, dm) => setDrawMode(dm)}
-          onDeleteAll={() => setDrawnLines([])}
+          activeTool={activeSubTool}
+          onToolChange={handleToolChange}
+          onDeleteAll={() => setDrawings([])}
           locked={drawingsLocked}
           onLockToggle={() => setDrawingsLocked((v) => !v)}
           visible={drawingsVisible}
@@ -372,11 +380,15 @@ function SimulatorPageInner() {
               ref={chartRef}
               candles={visibleCandles}
               emaData={emaData}
-              drawnLines={drawnLines}
-              drawingMode={drawMode}
-              onLineAdded={handleLineAdded}
               onCrosshairMove={setCrosshairInfo}
-              drawingsVisible={drawingsVisible}
+            />
+            <DrawingCanvas
+              drawings={drawings}
+              drawMode={drawMode}
+              chartRef={chartRef}
+              onDrawingAdded={handleDrawingAdded}
+              visible={drawingsVisible}
+              locked={drawingsLocked}
             />
           </div>
 

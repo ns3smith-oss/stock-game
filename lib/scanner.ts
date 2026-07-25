@@ -40,6 +40,83 @@ function avg(nums: number[]): number {
   return nums.reduce((a, b) => a + b, 0) / nums.length
 }
 
+export interface HistoricalFlag extends FlagMatch {
+  flagEndDate: string
+  outcomeLabel: 'breakout' | 'failed' | 'neutral'
+  outcomePct: number | null  // % move in 5 days after flag end; null if no bars after
+}
+
+// Find all non-overlapping flag patterns in a full bar history.
+// Slides a window forward, skipping past each found pattern to avoid duplicates.
+// Bars after the flag end are used to classify the outcome.
+export function findAllFlags(bars: DailyBar[], minConfidence = 55): HistoricalFlag[] {
+  const results: HistoricalFlag[] = []
+  let startFrom = 0
+
+  while (startFrom < bars.length) {
+    // We need at least BASELINE_WINDOW + MAX_POLE_LEN + MIN_FLAG_DAYS bars to detect anything
+    const minLen = BASELINE_WINDOW + MAX_POLE_LEN + MIN_FLAG_DAYS
+    // Try windows of 15–35 bars ending at each possible position
+    let foundAt = -1
+    let bestMatch: FlagMatch | null = null
+    let bestWindowEnd = -1
+
+    for (let end = startFrom + minLen; end <= bars.length; end++) {
+      const slice = bars.slice(startFrom, end)
+      // Only run detectFlag on windows that end in a valid flag range
+      // (don't let the window grow too large — cap at BASELINE_WINDOW + MAX_POLE_LEN + MAX_FLAG_DAYS + 2)
+      if (slice.length > BASELINE_WINDOW + MAX_POLE_LEN + MAX_FLAG_DAYS + 2) break
+      const m = detectFlag(slice)
+      if (m && m.confidence >= minConfidence) {
+        if (!bestMatch || m.confidence > bestMatch.confidence) {
+          bestMatch = m
+          bestWindowEnd = end
+          foundAt = startFrom
+        }
+      }
+    }
+
+    if (!bestMatch || bestWindowEnd === -1) {
+      startFrom++
+      continue
+    }
+
+    // flag ends at bestWindowEnd - 1 (last bar of the slice)
+    const flagEndIdx = bestWindowEnd - 1
+    const flagEndBar = bars[flagEndIdx]
+
+    // Look ahead 5 bars to classify outcome
+    const lookAhead = bars.slice(flagEndIdx + 1, flagEndIdx + 6)
+    let outcomePct: number | null = null
+    let outcomeLabel: HistoricalFlag['outcomeLabel'] = 'neutral'
+
+    if (lookAhead.length > 0) {
+      const entryPrice = flagEndBar.close
+      const highAfter  = Math.max(...lookAhead.map(b => b.high))
+      const lowAfter   = Math.min(...lookAhead.map(b => b.low))
+      const upMove   = ((highAfter  - entryPrice) / entryPrice) * 100
+      const downMove = ((lowAfter   - entryPrice) / entryPrice) * 100
+      // Classify: whichever direction hit ≥5% first wins; if neither, neutral
+      if (upMove >= 5 && Math.abs(downMove) < 5) {
+        outcomeLabel = 'breakout'
+        outcomePct = upMove
+      } else if (Math.abs(downMove) >= 5 && upMove < 5) {
+        outcomeLabel = 'failed'
+        outcomePct = downMove
+      } else {
+        outcomePct = ((lookAhead[lookAhead.length - 1].close - entryPrice) / entryPrice) * 100
+      }
+    }
+
+    results.push({ ...bestMatch, flagEndDate: flagEndBar.date, outcomeLabel, outcomePct })
+
+    // Skip past this pattern to avoid overlapping detections
+    startFrom = flagEndIdx + 1
+  }
+
+  return results
+}
+
 export function detectFlag(bars: DailyBar[]): FlagMatch | null {
   const n = bars.length
   if (n < BASELINE_WINDOW + MAX_POLE_LEN + MIN_FLAG_DAYS) return null
