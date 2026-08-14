@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { kv } from '@vercel/kv'
+import { Redis } from '@upstash/redis'
 import fs from 'fs'
 import path from 'path'
 import { subtractTradingDays } from '@/lib/indicators'
@@ -33,8 +33,12 @@ function isKVAvailable() {
   return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
 }
 
+const kv = isKVAvailable()
+  ? new Redis({ url: process.env.KV_REST_API_URL!, token: process.env.KV_REST_API_TOKEN! })
+  : null
+
 async function readCache<T>(key: string): Promise<T | null> {
-  if (isKVAvailable()) {
+  if (kv) {
     const val = await kv.get<T>(key)
     return val ?? null
   }
@@ -44,7 +48,7 @@ async function readCache<T>(key: string): Promise<T | null> {
 }
 
 async function writeCache<T>(key: string, data: T, ttlSeconds?: number): Promise<void> {
-  if (isKVAvailable()) {
+  if (kv) {
     await kv.set(key, data, ttlSeconds ? { ex: ttlSeconds } : {})
     return
   }
