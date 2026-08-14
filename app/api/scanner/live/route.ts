@@ -49,7 +49,11 @@ function readRobinhoodSnapshot(): RobinhoodSnapshot | null {
 }
 
 const BASELINE_DAYS = 5  // days used for average volume before the target day
-const MIN_AVG_VOL   = 200_000
+// Lowered from 200k — that threshold silently excluded dormant microcaps that
+// only start trading heavily on the day of the move (the classic low-float
+// runner pattern, e.g. MDXI $0.54→$1.13). 50k still filters out truly
+// untradeable names while letting real runners through.
+const MIN_AVG_VOL   = 50_000
 
 function latestTradingDay(): string {
   const d = new Date()

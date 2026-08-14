@@ -27,9 +27,12 @@ type SortKey = 'changePct' | 'todayRelVol' | 'gapPct'
 interface Props { onResult: (r: LiveResult) => void }
 
 export function LiveTab({ onResult }: Props) {
-  const [minPrice,     setMinPrice]     = useState('1')
+  // minPrice was 1 — that excludes the exact category of stock that makes the
+  // biggest % moves (sub-dollar low-float runners). minChangePct raised to 50
+  // to match "big daily movers," not moderate ones.
+  const [minPrice,     setMinPrice]     = useState('0.3')
   const [maxPrice,     setMaxPrice]     = useState('20')
-  const [minChangePct, setMinChangePct] = useState('10')
+  const [minChangePct, setMinChangePct] = useState('50')
   const [minRelVol,    setMinRelVol]    = useState('3')
 
   const [loading,  setLoading]  = useState(false)
