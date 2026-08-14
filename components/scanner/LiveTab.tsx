@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import type { LiveCandidate, LiveScanMessage } from '@/app/api/scanner/live/route'
+import type { LiveCandidate, LiveScanMessage, LiveSource } from '@/app/api/scanner/live/route'
 
 export interface LiveResult {
   asOfDate: string
   scannedTickers: number
   candidates: LiveCandidate[]
+  source: LiveSource
+  generatedAt?: string
 }
 
 interface ProgressState {
@@ -57,7 +59,7 @@ export function LiveTab({ onResult }: Props) {
           } else if (msg.type === 'scanning') {
             setProgress(p => ({ ...p!, scanning: true, tickerCount: msg.tickerCount }))
           } else if (msg.type === 'result') {
-            const r: LiveResult = { asOfDate: msg.asOfDate, scannedTickers: msg.scannedTickers, candidates: msg.candidates }
+            const r: LiveResult = { asOfDate: msg.asOfDate, scannedTickers: msg.scannedTickers, candidates: msg.candidates, source: msg.source, generatedAt: msg.generatedAt }
             setResult(r); onResult(r); setProgress(null)
           } else if (msg.type === 'error') {
             setError(msg.error); setProgress(null)
@@ -109,11 +111,18 @@ export function LiveTab({ onResult }: Props) {
         </div>
       </div>
 
-      {/* Free-plan notice */}
-      <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2 mb-4 text-[11px] text-yellow-300">
-        <span className="shrink-0 mt-0.5">⚡</span>
-        <span><strong>End-of-day mode</strong> — showing previous trading day&apos;s top movers. Live intraday updates during market hours require a Polygon Starter plan ($29/mo). Upgrade and set <code className="bg-black/30 px-1 rounded">POLYGON_PLAN=starter</code> in <code className="bg-black/30 px-1 rounded">.env.local</code> to activate.</span>
-      </div>
+      {/* Data source notice — Robinhood live overlay takes priority over the Polygon EOD notice once a result comes back */}
+      {result?.source === 'robinhood-live' ? (
+        <div className="flex items-start gap-2 bg-[#39FF14]/10 border border-[#39FF14]/30 rounded-lg px-3 py-2 mb-4 text-[11px] text-[#39FF14]">
+          <span className="shrink-0 mt-0.5">🟢</span>
+          <span><strong>Live via Robinhood</strong> — price and change% are real-time quotes{result.generatedAt ? ` as of ${new Date(result.generatedAt).toLocaleTimeString()}` : ''}. Candidate discovery still runs on Polygon&apos;s prior-day data (Robinhood has no market-wide screener), so this list is who was already active — today's price tells you if they're still moving.</span>
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2 mb-4 text-[11px] text-yellow-300">
+          <span className="shrink-0 mt-0.5">⚡</span>
+          <span><strong>End-of-day mode</strong> — showing previous trading day&apos;s top movers. Live intraday updates during market hours require a Polygon Starter plan ($29/mo), or a fresh Robinhood live-price snapshot. Upgrade and set <code className="bg-black/30 px-1 rounded">POLYGON_PLAN=starter</code> in <code className="bg-black/30 px-1 rounded">.env.local</code> to activate the paid-plan path.</span>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="bg-[#1e222d] border border-[#2a2e39] rounded-lg p-3 mb-4">
