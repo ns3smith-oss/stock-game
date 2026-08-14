@@ -24,12 +24,18 @@ const kv = isKVAvailable()
   ? new Redis({ url: process.env.KV_REST_API_URL!, token: process.env.KV_REST_API_TOKEN! })
   : null
 
+// Cache keys use ':' as a namespace separator, which is invalid in Windows
+// filenames (reserved for NTFS alternate data streams) — sanitize for disk paths.
+function diskCachePath(key: string): string {
+  return path.join(CACHE_DIR, `${key.replace(/:/g, '_')}.json`)
+}
+
 async function readCache<T>(key: string): Promise<T | null> {
   if (kv) {
     const val = await kv.get<T>(key)
     return val ?? null
   }
-  const diskPath = path.join(CACHE_DIR, `${key}.json`)
+  const diskPath = diskCachePath(key)
   if (fs.existsSync(diskPath)) return JSON.parse(fs.readFileSync(diskPath, 'utf-8')) as T
   return null
 }
@@ -39,7 +45,7 @@ async function writeCache<T>(key: string, data: T, ttlSeconds?: number): Promise
     await kv.set(key, data, ttlSeconds ? { ex: ttlSeconds } : {})
     return
   }
-  const diskPath = path.join(CACHE_DIR, `${key}.json`)
+  const diskPath = diskCachePath(key)
   fs.mkdirSync(path.dirname(diskPath), { recursive: true })
   fs.writeFileSync(diskPath, JSON.stringify(data))
 }
