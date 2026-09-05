@@ -3,7 +3,21 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(git pull *)",
+      "Bash(npx tsc *)",
+      "Skill(run)",
+      "Bash(lsof -ti:3000)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/scanner)",
+      "Bash(open *)",
+      "WebFetch(domain:www.youtube.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/simulator)"
     ]
   }
 }

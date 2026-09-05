@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, use, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -54,10 +54,11 @@ function defaultPane(): PaneState {
 }
 
 // ── Page wrapper ───────────────────────────────────────────────────────────
-export default function StudyPage({ params }: { params: { ticker: string } }) {
+export default function StudyPage({ params }: { params: Promise<{ ticker: string }> }) {
+  const { ticker } = use(params)
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen bg-[#131722] text-[#787B86]">Loading…</div>}>
-      <StudyPageInner ticker={params.ticker.toUpperCase()} />
+      <StudyPageInner ticker={ticker.toUpperCase()} />
     </Suspense>
   )
 }
@@ -163,9 +164,13 @@ function StudyPageInner({ ticker }: { ticker: string }) {
     setHistLoading(true)
     setHistError(null)
     fetch(`/api/scanner/history?ticker=${ticker}`)
-      .then(r => r.json())
-      .then((data: HistoryResult) => { setHistory(data); setHistLoading(false) })
-      .catch(e => { setHistError(String(e)); setHistLoading(false) })
+      .then(async r => {
+        const data = await r.json()
+        if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`)
+        return data as HistoryResult
+      })
+      .then(data => { setHistory(data); setHistLoading(false) })
+      .catch(e => { setHistError(String(e.message ?? e)); setHistLoading(false) })
   }, [ticker])
 
   // ── Replay helpers ───────────────────────────────────────────────────────
