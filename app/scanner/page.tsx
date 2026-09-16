@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { SetupTab, type SetupResult } from '@/components/scanner/SetupTab'
 import { LiveTab,  type LiveResult  } from '@/components/scanner/LiveTab'
 import { MatchesTab } from '@/components/scanner/MatchesTab'
+import { MoversTab } from '@/components/scanner/MoversTab'
 
-type Tab = 'setups' | 'live' | 'matches'
+type Tab = 'setups' | 'live' | 'matches' | 'movers'
 
 export default function ScannerHub() {
   const [activeTab,    setActiveTab]    = useState<Tab>('setups')
@@ -23,6 +24,7 @@ export default function ScannerHub() {
     { id: 'setups',  label: 'Setups',  badge: setupResult ? String(setupResult.candidates.length) : undefined },
     { id: 'live',    label: 'Live',    badge: liveResult  ? String(liveResult.candidates.length)  : undefined },
     { id: 'matches', label: 'Matches', badge: matchCount !== null ? String(matchCount) : undefined },
+    { id: 'movers',  label: 'Movers' },
   ]
 
   return (
@@ -76,6 +78,7 @@ export default function ScannerHub() {
       <div className={activeTab === 'setups'  ? 'block' : 'hidden'}><SetupTab  onResult={setSetupResult} /></div>
       <div className={activeTab === 'live'    ? 'block' : 'hidden'}><LiveTab   onResult={setLiveResult}  /></div>
       <div className={activeTab === 'matches' ? 'block' : 'hidden'}><MatchesTab setupResult={setupResult} liveResult={liveResult} /></div>
+      <div className={activeTab === 'movers'  ? 'block' : 'hidden'}><MoversTab /></div>
 
     </div>
   )
