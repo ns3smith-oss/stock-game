@@ -108,9 +108,12 @@ export async function GET(req: NextRequest) {
 
         for (let i = 0; i < dates.length; i++) {
           const date = dates[i]
-          if (FREE_PLAN && i > 0) await new Promise(r => setTimeout(r, 12500))
+          // Only rate-limit actual live Polygon calls, not cache hits - an
+          // unconditional per-iteration delay here defeated the whole point
+          // of caching (every scan took 5x12.5s regardless of cache state).
           const { data, wasCached } = await fetchGroupedDay(date, apiKey)
           emit({ type: 'progress', date, dayNum: i + 1, totalDays: dates.length, cached: wasCached })
+          if (!wasCached && FREE_PLAN) await new Promise(r => setTimeout(r, 12500))
           if (data.results) dayData.set(date, data.results)
         }
 
