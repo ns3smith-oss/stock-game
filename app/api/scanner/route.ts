@@ -26,7 +26,14 @@ export type ScanMessage =
   | { type: 'error';     error: string }
 
 // Cache ─────────────────────────────────────────────────────────────────────
-const CACHE_DIR = path.join(process.cwd(), '.scanner-cache')
+// On Vercel's serverless filesystem, only /tmp is writable - process.cwd()
+// is read-only there, so the disk-cache fallback (used when KV isn't
+// configured) needs to target /tmp specifically or every write throws
+// ENOENT. Note /tmp is ephemeral per-instance (lost on cold start, not
+// shared across concurrent instances), so this fallback is best-effort -
+// configure KV_REST_API_URL/KV_REST_API_TOKEN (Vercel's Upstash Redis
+// integration) for real persistent caching in production.
+const CACHE_DIR = process.env.VERCEL ? '/tmp/.scanner-cache' : path.join(process.cwd(), '.scanner-cache')
 const FREE_PLAN_DELAY_MS = 12500
 
 function isKVAvailable() {
