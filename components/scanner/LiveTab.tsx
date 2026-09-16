@@ -114,16 +114,16 @@ export function LiveTab({ onResult }: Props) {
         </div>
       </div>
 
-      {/* Data source notice — Robinhood live overlay takes priority over the Polygon EOD notice once a result comes back */}
-      {result?.source === 'robinhood-live' ? (
+      {/* Data source notice — Benzinga live overlay takes priority over the Polygon EOD notice once a result comes back */}
+      {result?.source === 'benzinga-live' ? (
         <div className="flex items-start gap-2 bg-[#39FF14]/10 border border-[#39FF14]/30 rounded-lg px-3 py-2 mb-4 text-[11px] text-[#39FF14]">
           <span className="shrink-0 mt-0.5">🟢</span>
-          <span><strong>Live via Robinhood</strong> — price and change% are real-time quotes{result.generatedAt ? ` as of ${new Date(result.generatedAt).toLocaleTimeString()}` : ''}. Candidate discovery still runs on Polygon&apos;s prior-day data (Robinhood has no market-wide screener), so this list is who was already active — today's price tells you if they're still moving.</span>
+          <span><strong>Live via Benzinga</strong> — price and change% are real-time{result.generatedAt ? ` as of ${new Date(result.generatedAt).toLocaleTimeString()}` : ''} for candidates Benzinga's movers feed covers; everything else falls back to Polygon's prior-day close. Candidate discovery still runs on Polygon's prior-day data, so this list is who was already active — today's price tells you if they're still moving.</span>
         </div>
       ) : (
         <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2 mb-4 text-[11px] text-yellow-300">
           <span className="shrink-0 mt-0.5">⚡</span>
-          <span><strong>End-of-day mode</strong> — showing previous trading day&apos;s top movers. Live intraday updates during market hours require a Polygon Starter plan ($29/mo), or a fresh Robinhood live-price snapshot. Upgrade and set <code className="bg-black/30 px-1 rounded">POLYGON_PLAN=starter</code> in <code className="bg-black/30 px-1 rounded">.env.local</code> to activate the paid-plan path.</span>
+          <span><strong>End-of-day mode</strong> — showing previous trading day&apos;s top movers. Live intraday updates during market hours require the Benzinga overlay to be available (check <code className="bg-black/30 px-1 rounded">BENZINGA_API_KEY</code> is configured), or a Polygon Starter plan ($29/mo) for live discovery data too.</span>
         </div>
       )}
 

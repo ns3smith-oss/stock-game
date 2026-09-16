@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 import { fetchGroupedDay } from '@/app/api/scanner/route'
+import { fetchBenzingaMovers } from '@/app/api/movers/route'
 import { subtractTradingDays } from '@/lib/indicators'
 
 export interface LiveCandidate {
@@ -13,7 +12,7 @@ export interface LiveCandidate {
   todayRelVol: number // today volume vs. 5-day avg
 }
 
-export type LiveSource = 'robinhood-live' | 'polygon-eod'
+export type LiveSource = 'benzinga-live' | 'polygon-eod'
 
 export type LiveScanMessage =
   | { type: 'progress'; date: string; dayNum: number; totalDays: number; cached: boolean }
@@ -21,31 +20,42 @@ export type LiveScanMessage =
   | { type: 'result'; asOfDate: string; scannedTickers: number; candidates: LiveCandidate[]; source: LiveSource; generatedAt?: string }
   | { type: 'error'; error: string }
 
-// Robinhood live-price overlay ───────────────────────────────────────────────
+// Benzinga live-price overlay ────────────────────────────────────────────────
 // Polygon's free tier only ever returns the *previous* trading day's grouped
 // bars (see `latestTradingDay()` below) — there is no live intraday endpoint
-// on that plan. Robinhood's Agentic Trading MCP has real-time quotes, but it
-// has no market-wide screener and no standalone API key this server process
-// can authenticate with (auth is tied to an interactive AI client session).
-// So the discovery/filtering pass below still runs on Polygon's prior-day
-// data as before; when a snapshot file exists (written by an MCP-connected
-// session pulling `get_equity_quotes` for that candidate list), we overlay
-// today's real price/change on top of it and re-filter with live numbers.
-interface RobinhoodSnapshot {
-  generatedAt: string                                          // ISO timestamp
-  quotes: Record<string, { price: number; previousClose: number }>
+// on that plan. The discovery/filtering pass below still runs on Polygon's
+// prior-day data as before; we then overlay real-time price/change from
+// Benzinga's Market Movers feed (same source Dee, the trading agent, uses)
+// on top of whichever candidates it happens to cover, and re-filter with the
+// live numbers. This replaced an earlier approach (a snapshot file someone
+// had to hand-generate via an MCP session) now that Benzinga gives this
+// automatically with no manual step.
+interface BenzingaOverlayQuote { price: number; previousClose: number }
+
+function currentBenzingaSession(): 'PRE_MARKET' | 'REGULAR' | 'AFTER_MARKET' {
+  // Minutes-since-midnight-ET check, since the 9:30 open and 4:00 close
+  // boundaries fall mid-hour - an hour-only check misclassifies the whole
+  // 9:00-9:30 window as REGULAR (empty pre-open) instead of PRE_MARKET.
+  // Approximates EDT (UTC-4); off by 1 hour during EST (Nov-Mar).
+  const now = new Date()
+  const etMinutes = ((now.getUTCHours() - 4 + 24) % 24) * 60 + now.getUTCMinutes()
+  if (etMinutes < 9 * 60 + 30) return 'PRE_MARKET'
+  if (etMinutes < 16 * 60) return 'REGULAR'
+  return 'AFTER_MARKET'
 }
 
-const SNAPSHOT_PATH = path.join(process.cwd(), '.scanner-cache', 'live_robinhood_snapshot.json')
-const SNAPSHOT_MAX_AGE_MS = 20 * 60 * 1000 // 20 min — stale beyond this, fall back to Polygon EOD
-
-function readRobinhoodSnapshot(): RobinhoodSnapshot | null {
+async function fetchBenzingaOverlay(): Promise<Map<string, BenzingaOverlayQuote> | null> {
   try {
-    if (!fs.existsSync(SNAPSHOT_PATH)) return null
-    const snap: RobinhoodSnapshot = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, 'utf-8'))
-    if (Date.now() - new Date(snap.generatedAt).getTime() > SNAPSHOT_MAX_AGE_MS) return null
-    return snap
-  } catch { return null }
+    const session = currentBenzingaSession()
+    const movers = await fetchBenzingaMovers(session, 200)
+    const map = new Map<string, BenzingaOverlayQuote>()
+    for (const m of [...movers.gainers, ...movers.losers]) {
+      map.set(m.symbol, { price: m.price, previousClose: m.previousClose })
+    }
+    return map
+  } catch {
+    return null
+  }
 }
 
 const BASELINE_DAYS = 5  // days used for average volume before the target day
@@ -141,16 +151,16 @@ export async function GET(req: NextRequest) {
           candidates.push({ ticker: bar.T, price, changePct, gapPct, volume: bar.v, todayRelVol })
         }
 
-        // Overlay real-time Robinhood prices when a fresh snapshot is available,
+        // Overlay real-time Benzinga prices for whichever candidates it covers,
         // then re-filter/re-sort since live change% can move candidates in or out.
-        const snapshot = readRobinhoodSnapshot()
+        const overlay = await fetchBenzingaOverlay()
         let finalCandidates = candidates
         let source: LiveSource = 'polygon-eod'
-        if (snapshot) {
-          source = 'robinhood-live'
+        if (overlay && overlay.size > 0) {
+          source = 'benzinga-live'
           finalCandidates = candidates
             .map(c => {
-              const q = snapshot.quotes[c.ticker]
+              const q = overlay.get(c.ticker)
               if (!q) return c
               return { ...c, price: q.price, changePct: ((q.price - q.previousClose) / q.previousClose) * 100 }
             })
@@ -163,7 +173,7 @@ export async function GET(req: NextRequest) {
           scannedTickers: targetBars.length,
           candidates: finalCandidates.slice(0, 100),
           source,
-          generatedAt: snapshot?.generatedAt,
+          generatedAt: overlay && overlay.size > 0 ? new Date().toISOString() : undefined,
         })
       } catch (e) {
         emit({ type: 'error', error: String(e) })

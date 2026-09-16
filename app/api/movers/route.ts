@@ -44,40 +44,44 @@ function toCandidate(raw: Record<string, unknown>): MoverCandidate {
   }
 }
 
-export async function GET(req: NextRequest) {
+// Reusable server-side fetch, so other routes (e.g. the Live scanner's
+// real-time overlay) can pull Benzinga movers directly without an extra
+// HTTP hop through this route. Throws on failure - callers decide how to
+// degrade (this route turns it into a JSON error response; the Live
+// scanner falls back to EOD-only data).
+export async function fetchBenzingaMovers(session: string, maxResults: number): Promise<MoversResult> {
   const apiKey = process.env.BENZINGA_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: 'BENZINGA_API_KEY is not configured on the server.' }, { status: 500 })
-  }
-
-  const { searchParams } = new URL(req.url)
-  const session = searchParams.get('session') ?? 'REGULAR'
-  const maxResults = searchParams.get('maxResults') ?? '50'
+  if (!apiKey) throw new Error('BENZINGA_API_KEY is not configured on the server.')
 
   const url = new URL('https://api.benzinga.com/api/v1/market/movers')
   url.searchParams.set('token', apiKey)
   url.searchParams.set('session', session)
-  url.searchParams.set('maxResults', maxResults)
+  url.searchParams.set('maxResults', String(maxResults))
 
-  let res: Response
-  try {
-    res = await fetch(url.toString())
-  } catch (e) {
-    return NextResponse.json({ error: `Failed to reach Benzinga: ${String(e)}` }, { status: 502 })
-  }
-
+  const res = await fetch(url.toString())
   if (!res.ok) {
     const text = await res.text()
-    return NextResponse.json({ error: `Benzinga returned HTTP ${res.status}: ${text.slice(0, 300)}` }, { status: 502 })
+    throw new Error(`Benzinga returned HTTP ${res.status}: ${text.slice(0, 300)}`)
   }
 
   const json = await res.json()
-  const result: MoversResult = {
+  return {
     session,
     fetchedAt: new Date().toISOString(),
     gainers: (json?.result?.gainers ?? []).map(toCandidate),
     losers: (json?.result?.losers ?? []).map(toCandidate),
   }
+}
 
-  return NextResponse.json(result)
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const session = searchParams.get('session') ?? 'REGULAR'
+  const maxResults = parseInt(searchParams.get('maxResults') ?? '50', 10)
+
+  try {
+    const result = await fetchBenzingaMovers(session, maxResults)
+    return NextResponse.json(result)
+  } catch (e) {
+    return NextResponse.json({ error: String(e instanceof Error ? e.message : e) }, { status: 502 })
+  }
 }
