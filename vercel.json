@@ -8,6 +8,9 @@
   "functions": {
     "app/api/scanner/route.ts": {
       "maxDuration": 300
+    },
+    "app/api/data/**/route.ts": {
+      "maxDuration": 60
     }
   }
 }

@@ -488,3 +488,12 @@ Computes the intersection of Setups and Live results. Stocks appearing in both =
 ---
 *Last updated: 2026-07-25 — Built Scanner Hub (3 tabs: Setups/Live/Matches), historical flag outcome rows, live momentum scanner API, Study Window (/study/[ticker]) with dual-pane chart + replay controls + history sidebar, description banners on all scanner tabs.*
 *To update this file: tell Claude "update CLAUDE.md" at the end of each session*
+
+
+## Data relay (`/api/data/*`, added 2026-09-26)
+
+Lets Dee's cloud routines pull Massive (Polygon) history without holding `POLYGON_API_KEY`. Every request needs `Authorization: Bearer <DATA_RELAY_TOKEN>`. If that env var isn't set the relay refuses everything (it spends a paid key, unlike the read-only app routes). Shared code in `lib/dataRelay.ts`; `next` cursors are only accepted for Polygon URLs under the expected path, so it can't be used as an open proxy.
+
+- `GET /api/data/aggs?ticker=&from=&to=&timespan=minute|hour|day&multiplier=1` returns `bars: [[t,o,h,l,c,v]]` (t = epoch ms UTC; minute bars include pre/post-market), paginated via `next`. On Stocks Starter, minute history goes back 5 years.
+- `GET /api/data/grouped?date=` returns every US stock's daily bar that day, including later-delisted names (survivorship-free universe).
+- `GET /api/data/tickers?date=|active=false&type=CS` is the ticker reference list including delisted names, 1,000 per page.
