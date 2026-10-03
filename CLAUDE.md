@@ -114,7 +114,7 @@ Screen 14: Course Ready (/onboarding/course-ready) — confetti streams, persona
 
 ### Leveler Track ✅ BUILT — 3 units, 14 lessons, 2 interactive demos + 1 anatomy demo
 - Unit 1: Reading the Charts (price chart reading + candlestick anatomy demo, support/resistance + 52-week range demo, volume, unit quiz)
-- Unit 2: Timing & Risk (short vs long term, risk management + 1% rule, stop loss + take profit, manipulation spotting, unit quiz)
+- Unit 2: Timing & Risk (short vs long term, risk management + 1% rule, stop loss + take profit, manipulation spotting, the morning jump usually fades (gap-up base rate measured by Dee), unit quiz)
 - Unit 3: The Full Picture (earnings reports, market cycles + bull/bear demo, building a strategy, pre-trade checklist, final quiz)
 - Final lesson ID: `lv3-l5` — unlocks Wealth Building track
 
@@ -289,7 +289,7 @@ stock-game/
 - Progress key: `stockly_builder_progress` | XP key: `stockly_builder_xp`
 
 ### Leveler Track (`lib/leveler-lessons.ts`)
-- 3 units, 14 lessons covering: candlestick reading, support/resistance, volume, short vs long term, 1% rule, stop loss/take profit, manipulation, earnings reports, market cycles, strategy building
+- 3 units, 15 lessons covering: candlestick reading, support/resistance, volume, short vs long term, 1% rule, stop loss/take profit, manipulation, gap-up fades, earnings reports, market cycles, strategy building
 - Final lesson ID: `lv3-l5` — completing this unlocks Wealth Building
 - Progress key: `stockly_leveler_progress` | XP key: `stockly_leveler_xp`
 - Track home: `app/learn/leveler/page.tsx`

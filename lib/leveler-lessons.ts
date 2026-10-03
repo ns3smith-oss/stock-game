@@ -522,6 +522,75 @@ export const LEVELER_UNITS: Unit[] = [
         ],
       },
       {
+        // Numbers measured by Dee: Dee/study/daytrade/base-rates-2026-09-26.md (12,029 gap-ups, 2021-11 to 2025-09, before costs)
+        id: 'lv2-l6',
+        title: 'The Morning Jump Usually Fades',
+        emoji: '🌅',
+        xpReward: 15,
+        slides: [
+          {
+            type: 'intro',
+            emoji: '🌅',
+            heading: 'The Morning Jump Usually Fades',
+            body: "A small stock opens up 15% and every feed is talking about it. It feels like you're late to the party. Here's what the numbers actually say.",
+          },
+          {
+            type: 'text',
+            emoji: '🚀',
+            heading: 'What is a gap-up?',
+            body: "A gap-up is when a stock opens well above where it closed the day before, usually because of news or hype overnight. Scanners and social media spotlight these moves first thing in the morning, which is exactly why they're so tempting.",
+          },
+          {
+            type: 'fact',
+            emoji: '📉',
+            heading: 'We checked 12,029 of them',
+            body: "We studied every time a $2–$20 stock opened at least 10% above the day before, from late 2021 to late 2025. On average, it lost about 3% from the open to the close. Two out of three closed lower than they opened.",
+          },
+          {
+            type: 'fact',
+            emoji: '🗓️',
+            heading: 'And the slide kept going',
+            body: "Over the next 20 trading days, the average gap-up drifted down about 4%. Every year in the study was negative. For comparison, an ordinary small stock on an ordinary day ended about flat.",
+          },
+          {
+            type: 'tap-reveal',
+            emoji: '💡',
+            heading: 'Why would a big jump fade?',
+            body: 'Tap to find out.',
+            tapReveal: "By the time a jump is big enough to show up on every scanner, the news is already priced in. The people who bought early use the excitement to sell to the people arriving late. It's the same crowd energy you learned to spot in the manipulation lesson.",
+          },
+          {
+            type: 'text',
+            emoji: '⚖️',
+            heading: "What this does — and doesn't — mean",
+            body: "These are averages, before trading fees. Some jumps keep running; we just couldn't tell which ones ahead of time. The lesson isn't \"never buy a stock that's moving.\" It's that a big jump at the open is not a buy signal on its own. You need a reason beyond \"it's going up.\"",
+          },
+          {
+            type: 'quiz',
+            emoji: '🧠',
+            heading: 'Quick check!',
+            quiz: {
+              question: 'A small stock opens up 15%. Historically, what happened by the close most of the time?',
+              options: [
+                'It kept climbing',
+                'It closed lower than it opened',
+                'It stayed flat',
+                'It doubled by the end of the day',
+              ],
+              correctIndex: 1,
+              explanation: "In our study of 12,029 gap-ups, about two out of three closed below their opening price, and the average one lost about 3% by the close. The jump is often the most exciting moment, not the start of the move.",
+            },
+          },
+          {
+            type: 'complete',
+            emoji: '🌅',
+            heading: 'You read the morning differently now.',
+            body: "A big jump at the open is news that's already priced in. You'll look for a real reason before you chase it.",
+            xpReward: 15,
+          },
+        ],
+      },
+      {
         id: 'lv2-l5',
         title: 'Timing & Risk Unit Quiz',
         emoji: '📝',
